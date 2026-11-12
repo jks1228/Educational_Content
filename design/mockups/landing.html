@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>〈서비스 이름〉 랜딩 목업</title>
+<link rel="icon" href="../icons/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="motion.css">
+<style>
+  /* v2 (사용자 피드백 2026-11-10): 결과 예시 카드·아래쪽 시작 버튼 구역 삭제, 테두리 카드 대신 여백·구분선 */
+  :root {
+    --brand: #2347C6; --brand-tint: #EEF3FF;
+    --ink: #1A1F2C; --ink-soft: #5B6372;
+    --bg: #FFFFFF; --band: #F4F5F7; --line: #E3E6EC;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Gothic A1', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+    font-size: 16px; line-height: 1.6; word-break: keep-all; overflow-wrap: break-word;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  h1, h2, h3, p { margin: 0; }
+  a:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+
+  /* 맨 위 이름 줄 */
+  .top { border-bottom: 1px solid var(--line); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; min-height: 56px; }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 900; color: var(--ink); text-decoration: none; }
+  .brand img { width: 26px; height: 26px; border-radius: 6px; }
+  .top-link { color: var(--ink-soft); font-size: 14px; text-decoration: none; padding: 12px 0; }
+
+  /* 첫 화면 */
+  .hero { padding: 48px 0 40px; }
+  .hero h1 { font-size: 32px; line-height: 1.3; font-weight: 900; letter-spacing: -0.03em; }
+  .hero .lead { margin-top: 14px; font-size: 17px; color: var(--ink-soft); max-width: 34em; }
+  .cta {
+    display: flex; align-items: center; justify-content: center; min-height: 56px; margin-top: 28px; padding: 0 32px;
+    border-radius: 8px; background: var(--brand); color: #fff; font-weight: 700; font-size: 18px; text-decoration: none;
+  }
+  .facts { list-style: none; padding: 0; margin: 20px 0 0; display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 15px; color: var(--ink-soft); }
+
+  /* 구역: 회색 띠로 나누고, 안에서는 가는 선만 */
+  section.block { border-top: 8px solid var(--band); padding: 36px 0; }
+  .block h2 { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; }
+
+  .steps { list-style: none; padding: 0; margin: 16px 0 0; counter-reset: step; }
+  .steps li { display: grid; grid-template-columns: 32px 1fr; gap: 2px 8px; padding: 16px 0; border-top: 1px solid var(--line); }
+  .steps li:first-child { border-top: 0; }
+  .steps li::before { counter-increment: step; content: counter(step); grid-row: span 2; font-size: 20px; font-weight: 900; color: var(--brand); line-height: 1.4; }
+  .steps h3, .gets h3 { font-size: 17px; font-weight: 700; }
+  .steps p, .gets p { color: var(--ink-soft); font-size: 15px; }
+
+  .gets { margin-top: 16px; }
+  .gets div { padding: 16px 0; border-top: 1px solid var(--line); }
+  .gets div:first-child { border-top: 0; }
+
+  .privacy { background: var(--band); border-radius: 8px; padding: 16px; margin-top: 20px; font-size: 15px; }
+  .privacy h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .privacy p { color: var(--ink-soft); }
+
+  .foot { border-top: 8px solid var(--band); padding: 24px 0 40px; font-size: 13px; color: var(--ink-soft); }
+  .foot p + p { margin-top: 4px; }
+
+  @media (min-width: 840px) {
+    .hero { padding: 80px 0 64px; }
+    .hero h1 { font-size: 44px; }
+    .cta { display: inline-flex; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .steps li { border-top: 0; padding: 0; }
+    .gets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .gets div { border-top: 0; padding: 0; }
+  }
+  /* PC(≥1024px): 진단 화면과 같은 최대 폭 1200px (사용자 요청 2026-11-12 "화면을 꽉 채워주세요") */
+  @media (min-width: 1024px) {
+    .wrap { max-width: 1200px; padding: 0 32px; }
+    .top .wrap { min-height: 64px; }
+    .hero h1 { font-size: 48px; }
+    .hero .lead { font-size: 19px; }
+    .steps, .gets { gap: 40px; }
+    .privacy { max-width: 760px; }
+  }
+  /* v3 표현 강화 (2026-11-12): 진단 화면과 같은 과목 타일·선 아이콘 */
+  .icon { width: 18px; height: 18px; flex: none; }
+  .subjects { list-style: none; padding: 0; margin: 28px 0 0; display: flex; gap: 12px; flex-wrap: wrap; }
+  .subjects li { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; padding-right: 8px; }
+  .subj-icon { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; }
+  .subj-icon .icon { width: 26px; height: 26px; }
+  .subj-icon.korean { background: #FFF4EC; color: #B4541A; }
+  .subj-icon.english { background: #EEF6F1; color: #1F7A4D; }
+  .subj-icon.math { background: #EEF3FF; color: var(--brand); }
+  .subjects li { animation: tile-in 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .subjects li:nth-child(2) { animation-delay: 80ms; }
+  .subjects li:nth-child(3) { animation-delay: 160ms; }
+  @keyframes tile-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .facts li { display: inline-flex; align-items: center; gap: 6px; }
+  .step-ic { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: #EEF3FF; color: var(--brand); margin-bottom: 8px; }
+  .step-ic .icon { width: 20px; height: 20px; }
+  .steps li::before { grid-row: span 3; }
+  .steps li > * { grid-column: 2; }
+  @media (prefers-reduced-motion: reduce) { .subjects li { animation: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="../icons/favicon.svg" alt="" width="26" height="26">〈서비스 이름〉</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap m-enter">
+      <h1 id="hero-title">어디부터 공부할지,<br>약한 곳부터 같이 찾아요</h1>
+      <p class="lead">성적과 약하다고 느끼는 단원을 체크하면, 수준에 맞는 강의와 책을 찾아 드려요.</p>
+      <a class="cta m-press" href="../prototype/index.html#/info">진단 시작하기</a>
+      <ul class="subjects" aria-label="진단할 수 있는 과목">
+        <li><span class="subj-icon korean" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="../icons/icons.svg#i-korean"/></svg></span>국어</li>
+        <li><span class="subj-icon english" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="../icons/icons.svg#i-english"/></svg></span>영어</li>
+        <li><span class="subj-icon math" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="../icons/icons.svg#i-math"/></svg></span>수학</li>
+      </ul>
+      <ul class="facts">
+        <li><svg class="icon" aria-hidden="true"><use href="../icons/icons.svg#i-time"/></svg>5~10분 걸려요</li>
+        <li><svg class="icon" aria-hidden="true"><use href="../icons/icons.svg#i-privacy"/></svg>이름이나 학교는 묻지 않아요</li>
+        <li>중1~고3, 2015·2022 개정 교육과정</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="how-title">
+    <div class="wrap">
+      <h2 id="how-title">이렇게 진행돼요</h2>
+      <ol class="steps">
+        <li><span class="step-ic" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="../icons/icons.svg#i-score"/></svg></span><h3>성적 적기</h3><p>최근 시험 점수나 등급을 적어요. 아는 것만 적어도 돼요.</p></li>
+        <li><span class="step-ic" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="../icons/icons.svg#i-check-area"/></svg></span><h3>약한 곳 표시하기</h3><p>단원마다 자신 있음, 보통, 약함 중 하나를 골라요.</p></li>
+        <li><span class="step-ic" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="../icons/icons.svg#i-recommend"/></svg></span><h3>추천 받기</h3><p>약하거나 보통인 곳마다 수준에 맞는 영상 강의와 책을 찾아 드려요.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="get-title">
+    <div class="wrap">
+      <h2 id="get-title">결과로 받는 것</h2>
+      <div class="gets">
+        <div><span class="step-ic" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="../icons/icons.svg#i-diagnosis"/></svg></span><h3>과목별 수준</h3><p>상, 중, 하로 알려 주고, 왜 그렇게 봤는지도 보여 줘요.</p></div>
+        <div><span class="step-ic" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="../icons/icons.svg#i-check-area"/></svg></span><h3>먼저 볼 영역</h3><p>약한 영역부터 순서대로 정리해 줘요.</p></div>
+        <div><span class="step-ic" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="../icons/icons.svg#i-lecture"/></svg></span><h3>영상 강의와 책</h3><p>사람이 확인하고 승인한 무료 강의와 EBS 교재를 영역마다 보여 줘요.</p></div>
+      </div>
+      <div class="privacy">
+        <h3>개인정보 안내</h3>
+        <p>이름이나 학교는 묻지 않아요. 입력한 성적은 이 화면 안에서만 계산하고 어디에도 저장하거나 보내지 않아요. 추천은 미리 확인해 둔 목록에서 고르고, 이때 과목·단원 이름과 학습 목적만 써요. 추천에는 제휴·광고 링크를 넣지 않아요.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap">
+      <p>수준을 나누는 기준은 아직 임시 기준이에요. 결과는 내가 직접 체크한 내용을 바탕으로 해요.</p>
+      <p>콘텐츠 라이선스: CC BY-NC-SA 4.0</p>
+      <p>문의: 〈연락처〉</p>
+    </div>
+  </footer>
+</main>
+</body>
+</html>

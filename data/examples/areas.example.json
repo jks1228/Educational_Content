@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "schoolYear": 2026,
+  "note": "예시 데이터입니다. 실제 영역 목록은 0단계 ②에서 채웁니다.",
+  "areas": [
+    {
+      "id": "m2-math-linear-function",
+      "grade": "m2",
+      "subject": "math",
+      "label": "일차함수",
+      "curriculum": "2022",
+      "order": 1
+    },
+    {
+      "id": "m1-korean-media",
+      "grade": "m1",
+      "subject": "korean",
+      "label": "매체",
+      "curriculum": "2022",
+      "order": 6
+    },
+    {
+      "id": "h1-korean-grammar",
+      "grade": "h1",
+      "subject": "korean",
+      "label": "문법",
+      "curriculum": "2022",
+      "course": "공통국어1·2",
+      "isElective": false,
+      "order": 4
+    },
+    {
+      "id": "h2-korean-reading-writing",
+      "grade": "h2",
+      "subject": "korean",
+      "label": "독서와 작문",
+      "curriculum": "2022",
+      "course": "독서와 작문",
+      "isElective": true,
+      "order": 2
+    },
+    {
+      "id": "h3-english-reading",
+      "grade": "h3",
+      "subject": "english",
+      "label": "독해",
+      "curriculum": "2015",
+      "order": 3
+    }
+  ]
+}

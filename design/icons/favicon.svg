@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- 서비스 전용 표시: 코발트 사각형 + 흰 체크 + 노란 진행 막대 ("약한 곳을 찾아 체크하고 앞으로 나아간다") -->
+  <title>〈서비스 이름〉</title>
+  <rect width="32" height="32" rx="8" fill="#2347C6"/>
+  <path d="m8.5 14.5 4.5 4.5 10-10" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="8" y="23" width="16" height="3.2" rx="1.6" fill="#FFE45E"/>
+</svg>

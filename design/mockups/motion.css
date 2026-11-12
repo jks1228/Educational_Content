@@ -1,0 +1,74 @@
+/*
+  모션 규칙 (design-spec 3절 "모션")
+  - 목적이 있는 움직임만: 무엇이 바뀌었는지 보여 줄 때
+  - 길이 100~400ms, transform·opacity만 움직임 (화면 다시 그리기 부담이 적음)
+  - 깜빡임 없음 (반복 움직임은 1.6초 주기 한 가지뿐, 초당 3회 기준보다 훨씬 느림)
+  - 사용자가 '움직임 줄이기'를 켜면 모두 끔 (맨 아래)
+*/
+:root {
+  --dur-press: 100ms;
+  --dur-quick: 150ms;
+  --dur-base: 240ms;
+  --dur-slow: 400ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 1. 화면 전환: 새 화면 내용이 살짝 올라오며 나타남 */
+.m-enter { animation: m-enter var(--dur-base) var(--ease-out) both; }
+@keyframes m-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 2. 단계 진행 막대: 이전 단계 길이에서 다음 단계 길이로 늘어남 (scaleX) */
+.m-progress { transform-origin: left center; transition: transform var(--dur-slow) var(--ease-in-out); }
+
+/* 3. 고를 때 체크 표시가 톡 나타남 */
+.m-check { display: inline-block; animation: m-check var(--dur-quick) var(--ease-out) both; }
+@keyframes m-check {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 4. "약함"을 고르면 노란 표시가 왼쪽에서 오른쪽으로 칠해짐 */
+.m-sweep { position: relative; isolation: isolate; }
+.m-sweep::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--mark, #FFE45E);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 250ms var(--ease-out);
+}
+.m-sweep.is-on::after { transform: scaleX(1); }
+
+/* 5. 진단 결과 수준 상자가 커지며 나타남 */
+.m-reveal { animation: m-reveal 300ms var(--ease-out) 100ms both; }
+@keyframes m-reveal {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 6. 버튼 눌림 */
+.m-press { transition: transform var(--dur-press) var(--ease-out); }
+.m-press:active { transform: scale(0.98); }
+
+/* 7. 불러오는 중: 천천히 밝기만 바뀜 (1.6초 주기)
+   - 데이터를 불러오는 동안의 빈 자리(skeleton)에만 씀. 글자에는 쓰지 않음
+   - S5 "준비 중" 안내처럼 계속 남는 정보에는 쓰지 않음 (끝없이 깜빡이는 글자가 되고, 흐려질 때 대비가 떨어짐) */
+.m-loading { animation: m-loading 1.6s ease-in-out infinite alternate; }
+@keyframes m-loading {
+  from { opacity: 1; }
+  to { opacity: 0.55; }
+}
+
+/* 움직임 줄이기: 모든 움직임을 끄고 끝 상태만 보여 줌 */
+@media (prefers-reduced-motion: reduce) {
+  .m-enter, .m-check, .m-reveal, .m-loading { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .m-progress, .m-press, .m-sweep::after { transition: none !important; }
+  .m-press:active { transform: none !important; }
+}

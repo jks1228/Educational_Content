@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>아이콘·모션 시트</title>
+<link rel="icon" href="../icons/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="motion.css">
+<style>
+  :root {
+    --brand: #2347C6; --brand-tint: #E6EDFF; --ink: #16204A; --ink-soft: #59647E;
+    --bg: #F3F6FC; --surface: #FFFFFF; --line: #C9D1E0; --control: #7A869F;
+    --mark: #FFE45E; --mark-light: #FFF4B8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Gothic A1', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-size: 16px; line-height: 1.6; word-break: keep-all;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 24px; font-weight: 900; margin: 0; }
+  h2 { font-size: 20px; font-weight: 900; margin: 32px 0 4px; }
+  p { margin: 0; }
+  .soft { color: var(--ink-soft); font-size: 14px; }
+  button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+  /* 아이콘 표 */
+  .icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-top: 12px; padding: 0; list-style: none; }
+  .icons li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 6px; text-align: center; font-size: 13px; font-weight: 700; }
+  .icons svg { width: 28px; height: 28px; color: var(--ink); display: block; margin: 0 auto 6px; }
+  .icons code { display: block; font-size: 11px; color: var(--ink-soft); font-weight: 400; }
+  .sizes { display: flex; align-items: center; gap: 16px; margin-top: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; flex-wrap: wrap; }
+  .sizes svg { color: var(--brand); }
+  .on-brand { background: var(--brand); color: #fff; border-radius: 8px; padding: 6px; display: inline-flex; }
+  .sizes .on-brand svg { color: #fff; }
+  .favicons { display: flex; align-items: end; gap: 16px; margin-top: 12px; }
+  .favicons img { display: block; }
+
+  /* 모션 데모 */
+  .demos { display: grid; gap: 12px; margin-top: 12px; }
+  @media (min-width: 760px) { .demos { grid-template-columns: repeat(2, 1fr); } }
+  .demo { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .demo-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .demo h3 { font-size: 16px; font-weight: 900; margin: 0; }
+  .replay {
+    min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1.5px solid var(--control);
+    background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .stage { margin-top: 10px; min-height: 72px; display: flex; align-items: center; gap: 10px; }
+  .spec { font-size: 13px; color: var(--ink-soft); margin-top: 8px; }
+
+  .mini-card { background: var(--brand-tint); border-radius: 10px; padding: 10px 12px; font-weight: 700; width: 100%; }
+  /* 데모 전용 막대: 흰 카드 위라 트랙을 진하게 (노랑과 4.65:1). 실제 화면의 막대는 코발트 띠 위 반투명 트랙 */
+  .bar { height: 8px; border-radius: 4px; background: var(--ink-soft); width: 100%; overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 100%; background: var(--mark); border-radius: 4px; }
+  .pick {
+    min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1.5px solid var(--control);
+    background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+  }
+  .pick.is-on { border: 2px solid var(--ink); }
+  .pick.dark.is-on { background: var(--ink); color: #fff; }
+  .level-box { width: 60px; height: 60px; border-radius: 14px; background: var(--brand); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .level-box small { font-size: 12px; font-weight: 700; }
+  .level-box b { font-size: 26px; font-weight: 900; line-height: 1; }
+  .primary { min-height: 52px; padding: 0 24px; border: 0; border-radius: 10px; background: var(--brand); color: #fff; font: inherit; font-weight: 900; cursor: pointer; }
+  .skeleton { display: grid; gap: 8px; width: 100%; }
+  .skeleton span { display: block; height: 14px; border-radius: 6px; background: var(--line); }
+  .skeleton span:nth-child(2) { width: 70%; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>아이콘·모션 시트 (1-A)</h1>
+  <p class="soft">서비스 전용 아이콘(직접 그림, 외부 아이콘 없음)과 화면에서 쓰는 움직임 7가지입니다. 각 데모의 "다시 보기"를 누르면 움직임이 다시 재생됩니다. 기기에서 '움직임 줄이기'를 켜면 모든 움직임이 꺼지고 끝 상태만 보입니다.</p>
+
+  <h2 id="icons-title">아이콘</h2>
+  <p class="soft">24×24 격자, 선 굵기 2, 둥근 끝. 색은 글자색을 따라갑니다. 화면에서는 항상 글자 라벨과 함께 씁니다.</p>
+  <ul class="icons" aria-labelledby="icons-title">
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-korean"/></svg>국어<code>i-korean</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-english"/></svg>영어<code>i-english</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-math"/></svg>수학<code>i-math</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-score"/></svg>성적 적기<code>i-score</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-check-area"/></svg>약한 곳 표시<code>i-check-area</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-diagnosis"/></svg>진단 결과<code>i-diagnosis</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-recommend"/></svg>추천 받기<code>i-recommend</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-lecture"/></svg>강의<code>i-lecture</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-book"/></svg>책<code>i-book</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-free"/></svg>무료<code>i-free</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-external"/></svg>새 탭에서 보기<code>i-external</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-hide"/></svg>숨기기<code>i-hide</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-print"/></svg>인쇄<code>i-print</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-check"/></svg>선택됨<code>i-check</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-back"/></svg>뒤로<code>i-back</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-info"/></svg>안내<code>i-info</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-alert"/></svg>오류<code>i-alert</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-privacy"/></svg>개인정보<code>i-privacy</code></li>
+    <li><svg aria-hidden="true"><use href="../icons/icons.svg#i-time"/></svg>걸리는 시간<code>i-time</code></li>
+  </ul>
+
+  <div class="sizes" aria-label="아이콘 크기 예">
+    <svg width="20" height="20" aria-hidden="true"><use href="../icons/icons.svg#i-book"/></svg><span class="soft">20px (글 속)</span>
+    <svg width="24" height="24" aria-hidden="true"><use href="../icons/icons.svg#i-book"/></svg><span class="soft">24px (기본)</span>
+    <svg width="28" height="28" aria-hidden="true"><use href="../icons/icons.svg#i-book"/></svg><span class="soft">28px (카드)</span>
+    <span class="on-brand"><svg width="24" height="24" aria-hidden="true"><use href="../icons/icons.svg#i-book"/></svg></span><span class="soft">코발트 위 흰색</span>
+  </div>
+
+  <h2>서비스 표시 (파비콘)</h2>
+  <p class="soft">코발트 사각형 + 흰 체크 + 노란 진행 막대. 약한 곳을 찾아 체크하고 앞으로 나아간다는 뜻입니다.</p>
+  <div class="favicons">
+    <img src="../icons/favicon.svg" width="64" height="64" alt="서비스 표시 64px">
+    <img src="../icons/favicon.svg" width="32" height="32" alt="서비스 표시 32px">
+    <img src="../icons/favicon.svg" width="16" height="16" alt="서비스 표시 16px">
+  </div>
+
+  <h2>모션</h2>
+  <p class="soft">길이 100~400ms, 위치·크기(transform)와 투명도(opacity)만 움직입니다. 공용 규칙은 motion.css 한 파일에 있습니다.</p>
+  <div class="demos">
+    <div class="demo">
+      <div class="demo-head"><h3>1. 화면 전환</h3><button class="replay" type="button" data-replay="d1">다시 보기</button></div>
+      <div class="stage"><div id="d1" class="mini-card m-enter">다음 화면 내용이 살짝 올라오며 나타나요</div></div>
+      <p class="spec">240ms, 아래 8px → 제자리, 투명 → 보임</p>
+    </div>
+    <div class="demo">
+      <div class="demo-head"><h3>2. 단계 진행 막대</h3><button class="replay" type="button" id="b2">다음 단계</button></div>
+      <div class="stage"><div class="bar" role="img" aria-label="5단계 중 2단계"><span id="d2" class="m-progress" style="transform:scaleX(.4)"></span></div></div>
+      <p class="spec">400ms, 막대가 다음 단계 길이로 늘어남 (scaleX)</p>
+    </div>
+    <div class="demo">
+      <div class="demo-head"><h3>3. 고를 때 체크</h3><button class="replay" type="button" id="b3">다시 보기</button></div>
+      <div class="stage"><span class="pick dark is-on" id="d3"><span class="m-check" aria-hidden="true">✓</span>고3</span></div>
+      <p class="spec">150ms, ✓가 작게 → 원래 크기로 톡 나타남</p>
+    </div>
+    <div class="demo">
+      <div class="demo-head"><h3>4. "약함" 표시 칠하기</h3><button class="replay" type="button" id="b4">다시 보기</button></div>
+      <div class="stage"><span class="pick m-sweep is-on" id="d4"><span aria-hidden="true">✓</span>약함</span></div>
+      <p class="spec">250ms, 노란 표시가 왼쪽에서 오른쪽으로 칠해짐 (scaleX)</p>
+    </div>
+    <div class="demo">
+      <div class="demo-head"><h3>5. 결과 수준 등장</h3><button class="replay" type="button" data-replay="d5">다시 보기</button></div>
+      <div class="stage"><div id="d5" class="level-box m-reveal"><small>수준</small><b>중</b></div><span class="soft">0.1초 뒤 300ms 동안 커지며 나타남</span></div>
+      <p class="spec">300ms (0.1초 늦게 시작), 92% → 100% 크기, 투명 → 보임</p>
+    </div>
+    <div class="demo">
+      <div class="demo-head"><h3>6. 버튼 눌림</h3></div>
+      <div class="stage"><button class="primary m-press" type="button">눌러 보세요</button></div>
+      <p class="spec">100ms, 누르는 동안 98% 크기</p>
+    </div>
+    <div class="demo">
+      <div class="demo-head"><h3>7. 불러오는 중</h3></div>
+      <div class="stage"><div class="skeleton m-loading" role="status" aria-label="추천을 불러오는 중"><span></span><span></span></div></div>
+      <p class="spec">1.6초 주기로 밝기만 천천히 바뀜 (깜빡임 기준 초당 3회보다 훨씬 느림). 움직임 줄이기에서는 멈춤</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 데모 다시 재생용 (목업 전용). 클래스를 뺐다가 다시 넣어 애니메이션을 처음부터 보여 줌.
+  function replay(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+  document.querySelectorAll('[data-replay]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var el = document.getElementById(b.dataset.replay);
+      replay(el, el.classList.contains('m-enter') ? 'm-enter' : 'm-reveal');
+    });
+  });
+  var step = 2;
+  document.getElementById('b2').addEventListener('click', function () {
+    step = step >= 5 ? 1 : step + 1;
+    document.getElementById('d2').style.transform = 'scaleX(' + step / 5 + ')';
+    document.getElementById('d2').parentElement.setAttribute('aria-label', '5단계 중 ' + step + '단계');
+  });
+  document.getElementById('b3').addEventListener('click', function () { replay(document.querySelector('#d3 .m-check'), 'm-check'); });
+  document.getElementById('b4').addEventListener('click', function () {
+    var el = document.getElementById('d4');
+    el.classList.remove('is-on'); void el.offsetWidth;
+    setTimeout(function () { el.classList.add('is-on'); }, 30);
+  });
+</script>
+</body>
+</html>

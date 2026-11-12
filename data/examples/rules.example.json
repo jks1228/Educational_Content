@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "schoolYear": 2026,
+  "note": "README '추천 기준'을 그대로 옮긴 예시입니다. 경계값은 임시 기준입니다.",
+  "levelIsProvisional": true,
+  "naesinScaleByGrade": {
+    "h1": 5,
+    "h2": 5,
+    "h3": 9
+  },
+  "levelThresholds": {
+    "middleScore": [
+      { "level": "high", "min": 90, "max": 100 },
+      { "level": "mid", "min": 70, "max": 89 },
+      { "level": "low", "min": 0, "max": 69 }
+    ],
+    "middleAchievement": {
+      "A": "high",
+      "B": "mid",
+      "C": "mid",
+      "D": "low",
+      "E": "low"
+    },
+    "middleAchievement3": {
+      "A": "high",
+      "B": "mid",
+      "C": "low"
+    },
+    "naesin9": [
+      { "level": "high", "min": 1, "max": 2 },
+      { "level": "mid", "min": 3, "max": 5 },
+      { "level": "low", "min": 6, "max": 9 }
+    ],
+    "naesin5": [
+      { "level": "high", "min": 1, "max": 1 },
+      { "level": "mid", "min": 2, "max": 3 },
+      { "level": "low", "min": 4, "max": 5 }
+    ],
+    "mock9": [
+      { "level": "high", "min": 1, "max": 2 },
+      { "level": "mid", "min": 3, "max": 5 },
+      { "level": "low", "min": 6, "max": 9 }
+    ]
+  },
+  "purposeRule": {
+    "naesin": "naesin",
+    "suneung": "mock",
+    "both": "lower",
+    "singleInput": "useProvided"
+  },
+  "directions": [
+    { "level": "low", "check": "weak", "lectureType": "concept-basic", "bookType": "easy-concept", "label": "개념 기초 강의 + 쉬운 개념서" },
+    { "level": "low", "check": "normal", "lectureType": "concept-basic", "bookType": "basic-workbook", "label": "개념 기초 강의 + 기본 문제집" },
+    { "level": "mid", "check": "weak", "lectureType": "concept-review", "bookType": "type-workbook", "label": "개념 정리 강의 + 유형별 문제집" },
+    { "level": "mid", "check": "normal", "lectureType": "type-practice", "bookType": "basic-workbook", "label": "유형 연습 강의 + 기본 문제집" },
+    { "level": "high", "check": "weak", "lectureType": "concept-review", "bookType": "hard-workbook", "label": "개념 정리 강의 + 고난도 문제집" },
+    { "level": "high", "check": "normal", "lectureType": "advanced", "bookType": "hard-workbook", "label": "심화 강의 + 고난도 문제집" }
+  ],
+  "allConfidentRule": "useOwnLevelNormal",
+  "maxPerArea": {
+    "lecture": 2,
+    "book": 2
+  }
+}

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>추천 후보 확인 (내부용)</title>
+<style>
+  :root { --ink: #1B2230; --ink-soft: #4B5563; --line: #E3E6EB; --band: #F3F4F6; --brand: #1F4FBF; --bg: #fff; --error: #B42318; --weak: #B93C0B; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color: var(--ink); background: var(--band); line-height: 1.5; }
+  main { max-width: 880px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 22px; margin: 8px 0 4px; }
+  h2 { font-size: 17px; margin: 0 0 12px; }
+  .soft { color: var(--ink-soft); font-size: 14px; }
+  .sec { background: var(--bg); padding: 16px; margin-top: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+  label { display: grid; gap: 4px; font-size: 14px; font-weight: 700; }
+  input[type=url], input[type=text] { font: inherit; font-weight: 400; border: 1px solid #8B95A5; border-radius: 6px; padding: 8px; min-height: 44px; width: 100%; }
+  input:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  select, textarea { font: inherit; border: 1px solid #8B95A5; border-radius: 6px; padding: 8px; min-height: 44px; background: var(--bg); color: var(--ink); }
+  textarea { width: 100%; min-height: 64px; font-weight: 400; }
+  button { font: inherit; font-weight: 700; min-height: 44px; padding: 0 14px; border-radius: 6px; border: 1px solid #8B95A5; background: var(--bg); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  button:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .item { display: grid; grid-template-columns: 128px 1fr; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
+  .item:first-child { border-top: 0; }
+  .thumb { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--band); border-radius: 4px; }
+  .item.book .thumb { aspect-ratio: 120 / 174; width: 72px; }
+  .title { font-weight: 700; }
+  .status { font-weight: 700; }
+  .status.approved { color: var(--brand); }
+  .status.retired { color: var(--ink-soft); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .msg { margin-top: 8px; font-weight: 700; }
+  .msg.err { color: var(--error); }
+  a { color: var(--brand); }
+  .fix { margin-top: 8px; }
+  .fix summary { min-height: 44px; display: flex; align-items: center; font-size: 14px; color: var(--ink-soft); cursor: pointer; }
+  .fix summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  /* PC(≥1024px): 넓게 — 위 세 구역은 2열, 후보 목록은 넓은 한 단 */
+  @media (min-width: 1024px) {
+    main { max-width: 1200px; padding: 24px 32px; }
+    .top-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+    .top-grid > .sec:first-child { grid-column: 1 / -1; }
+    .sec { border-radius: 8px; padding: 20px 24px; }
+    .item { grid-template-columns: 160px 1fr; }
+  }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>추천 후보 확인 (내부용)</h1>
+  <p class="soft">학생 화면에는 연결되지 않은 페이지예요. 흐름: <b>후보 찾기</b>(허용한 채널 — EBS와 다른 선생님 — 과 EBS 교재) → <b>[승인]</b> 한 번. 승인한 것만 학생 추천 화면에 나와요. 추천 이유는 자동으로 만들어져요. 결과는 <code>data/recommendations.json</code>에 저장돼요.</p>
+
+  <div class="top-grid">
+  <section class="sec" aria-labelledby="h-pick">
+    <h2 id="h-pick">어느 단원의 후보를 볼까요?</h2>
+    <div class="row">
+      <label>학년 <select id="grade"></select></label>
+      <label>과목 <select id="course"></select></label>
+      <label>단원 <select id="unit"></select></label>
+      <label>상태 <select id="status">
+        <option value="">전체</option><option value="candidate">후보</option><option value="approved">승인</option><option value="retired">제외</option>
+      </select></label>
+    </div>
+    <div class="actions">
+      <button type="button" class="primary" id="collect">이 단원 후보 찾기</button>
+    </div>
+    <p class="soft">후보 찾기는 아래 "채널 목록"에 저장해 둔 영상 제목에서 이 단원을 골라요(검색 없음). 맞은 영상의 길이 확인에만 50개당 1 unit을 써요. 카카오 책 검색 1~2번.</p>
+    <p class="msg" id="msg" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="sec" aria-labelledby="h-add">
+    <h2 id="h-add">YouTube 주소 추가</h2>
+    <p class="soft">좋은 강의를 알고 있으면 주소를 붙여 넣으세요. 위에서 고른 학년·과목·단원의 후보로 들어가요. 영상(youtube.com/watch, youtu.be) 또는 재생목록(youtube.com/playlist) 주소만 받아요.</p>
+    <div class="row">
+      <label style="flex:1 1 320px">주소 <input id="addUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://www.youtube.com/watch?v=…"></label>
+      <button type="button" id="addUrlBtn">후보로 추가</button>
+    </div>
+    <p class="msg" id="addMsg" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="sec" aria-labelledby="h-ch">
+    <h2 id="h-ch">채널 목록 <span class="soft" id="usage"></span></h2>
+    <p class="soft">허용한 채널의 영상 목록 전체를 받아 이 컴퓨터에 저장해요(50개당 1 unit, 하루 한 번 새 영상만). 하루 7,000 units(70%)를 넘지 않게 서버가 막아요.</p>
+    <div id="chans"></div>
+    <div class="actions"><button type="button" class="primary" id="syncAll">채널 목록 받기 (모든 채널)</button></div>
+    <div class="row" style="margin-top:12px">
+      <label style="flex:1 1 280px">다른 선생님 채널 추가 (@핸들 또는 채널 주소) <input id="addCh" type="text" autocomplete="off" placeholder="@channel"></label>
+      <label>학교 <select id="addChSchool"><option value="">중·고 모두</option><option value="middle">중학교</option><option value="high">고등학교</option></select></label>
+      <button type="button" id="addChBtn">채널 추가</button>
+    </div>
+    <p class="soft">무료로 전체 강의를 공개하는 채널만 넣어 주세요. 빼고 싶은 채널은 <code>data/sources.json</code>의 <code>otherChannels</code>에서 <code>enabled</code>를 <code>false</code>로.</p>
+    <p class="msg" id="chMsg" role="status" aria-live="polite"></p>
+  </section>
+
+  </div>
+
+  <section class="sec" aria-labelledby="h-list">
+    <h2 id="h-list">후보 목록 <span class="soft" id="count"></span></h2>
+    <div id="list"></div>
+  </section>
+</main>
+<script src="review.js"></script>
+</body>
+</html>

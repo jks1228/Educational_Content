@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "schoolYear": 2026,
+  "note": "가상 예시입니다. 실제 강의·책이 아니며 링크는 example.com입니다. 모두 candidate 상태라 앱 화면에는 나오지 않습니다.",
+  "items": [
+    {
+      "id": "lec-h3-english-0001",
+      "kind": "lecture",
+      "title": "(가상) 수능 영어 독해 개념 정리",
+      "provider": "(가상) 공공 교육방송",
+      "grades": ["h3"],
+      "subject": "english",
+      "areaIds": ["h3-english-reading"],
+      "curriculum": "2015",
+      "difficulty": "mid",
+      "type": "concept-review",
+      "reason": "(예시 문구) 글의 주제·요지를 찾는 순서를 처음부터 다시 정리해 주어, 독해가 약한 중간 수준 학생에게 맞습니다.",
+      "url": "https://example.com/lecture/h3-english-reading-review",
+      "isFree": true,
+      "lastCheckedAt": "2026-11-09",
+      "rank": 1,
+      "review": {
+        "status": "candidate"
+      }
+    },
+    {
+      "id": "book-h3-english-0001",
+      "kind": "book",
+      "title": "(가상) 영어 독해 유형별 문제집",
+      "provider": "(가상) 예시출판",
+      "grades": ["h3"],
+      "subject": "english",
+      "areaIds": ["h3-english-reading"],
+      "curriculum": "2015",
+      "difficulty": "mid",
+      "type": "type-workbook",
+      "reason": "(예시 문구) 빈칸·순서·요약 등 유형별로 묶여 있어, 개념 정리 강의 뒤에 바로 연습하기 좋습니다.",
+      "url": "https://example.com/book/h3-english-type-workbook",
+      "isFree": false,
+      "lastCheckedAt": "2026-11-09",
+      "isbn": "0000000000000",
+      "rank": 1,
+      "review": {
+        "status": "candidate"
+      }
+    },
+    {
+      "id": "lec-m2-math-0001",
+      "kind": "lecture",
+      "title": "(가상) 중2 일차함수 개념 기초",
+      "provider": "(가상) 공공 교육방송",
+      "grades": ["m2"],
+      "subject": "math",
+      "areaIds": ["m2-math-linear-function"],
+      "curriculum": "2022",
+      "difficulty": "low",
+      "type": "concept-basic",
+      "reason": "(예시 문구) 좌표와 기울기를 그림으로 먼저 보여 주어, 개념부터 다시 잡아야 하는 학생에게 맞습니다.",
+      "url": "https://example.com/lecture/m2-math-linear-function-basic",
+      "isFree": true,
+      "lastCheckedAt": "2026-11-09",
+      "rank": 1,
+      "review": {
+        "status": "reviewed",
+        "checkedBy": "reviewer"
+      }
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!--
+    서비스 전용 아이콘 세트 (직접 그림, 외부 아이콘 없음)
+    규칙: 24×24 격자, 선 굵기 2, 둥근 선 끝·모서리, 색은 currentColor(글자색을 따라감)
+    사용: <svg class="icon" aria-hidden="true"><use href="icons.svg#i-book"/></svg>
+    라이선스: 이 프로젝트 콘텐츠와 같음 (README 라이선스)
+  -->
+
+  <!-- 과목 -->
+  <symbol id="i-korean" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 국어: 'ㄱ'과 'ㅏ' 획 -->
+    <path d="M4 6h7v9"/><path d="M16 4v16"/><path d="M16 12h4"/>
+  </symbol>
+  <symbol id="i-english" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 영어: 'A'와 'a' 모양 -->
+    <path d="M3 19 8 5l5 14"/><path d="M5 14h6"/>
+    <circle cx="17.5" cy="16" r="3"/><path d="M20.5 13v6"/>
+  </symbol>
+  <symbol id="i-math" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 수학: 더하기·빼기·곱하기·같다 -->
+    <path d="M7 3.5v6M4 6.5h6"/><path d="M14 6.5h6"/>
+    <path d="m4.5 14.5 5 5M9.5 14.5l-5 5"/><path d="M14 15.5h6M14 19h6"/>
+  </symbol>
+
+  <!-- 진단 흐름 -->
+  <symbol id="i-score" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 성적 적기: 시험지 + 연필 -->
+    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5"/><path d="M8 8h6M8 12h4"/>
+    <path d="m20.5 11.5-6.5 6.5-3 1 1-3 6.5-6.5a1.4 1.4 0 0 1 2 2z"/>
+  </symbol>
+  <symbol id="i-check-area" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 약한 곳 표시: 목록 + 표시 막대 -->
+    <path d="M4 6h3M4 12h3M4 18h3"/><path d="M10 6h10"/>
+    <rect x="10" y="10" width="10" height="4" rx="1"/><path d="M10 18h10"/>
+  </symbol>
+  <symbol id="i-diagnosis" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 진단 결과: 막대그래프 + 돋보기 -->
+    <path d="M4 20V10M8.5 20v-6M13 20v-4"/>
+    <circle cx="16.5" cy="7.5" r="3.5"/><path d="m19 10 2.5 2.5"/>
+  </symbol>
+  <symbol id="i-recommend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 추천 받기: 강의 화면 + 책 겹침 -->
+    <rect x="3" y="4" width="12" height="9" rx="2"/><path d="m8 7 3 1.5L8 10z"/>
+    <path d="M12 20h8a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-2"/><path d="M12 16h5"/>
+  </symbol>
+
+  <!-- 추천 항목 -->
+  <symbol id="i-lecture" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 강의: 재생 화면 -->
+    <rect x="3" y="5" width="18" height="12" rx="2"/><path d="m10 8.5 5 2.5-5 2.5z"/><path d="M8 21h8"/>
+  </symbol>
+  <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 책: 펼친 책 -->
+    <path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/><path d="M12 6.5v13"/>
+  </symbol>
+  <symbol id="i-free" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 무료: 꼬리표 -->
+    <path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8a1.5 1.5 0 0 1 0 2l-7 7a1.5 1.5 0 0 1-2 0z"/><circle cx="8" cy="8" r="1.5"/>
+  </symbol>
+  <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 새 탭에서 열기 -->
+    <path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>
+  </symbol>
+  <symbol id="i-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 숨기기: 눈 + 사선 -->
+    <path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 20 20 4"/>
+  </symbol>
+  <symbol id="i-print" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 인쇄 -->
+    <path d="M7 8V3h10v5"/><rect x="3" y="8" width="18" height="8" rx="2"/><path d="M7 13h10v8H7z"/>
+  </symbol>
+
+  <!-- 상태·안내 -->
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6v.4"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 10v4"/><path d="M12 17v.4"/></symbol>
+  <symbol id="i-privacy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><!-- 개인정보: 방패 + 자물쇠 -->
+    <path d="M12 3 4.5 6v5.5c0 4.5 3.2 8 7.5 9.5 4.3-1.5 7.5-5 7.5-9.5V6z"/>
+    <rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/>
+  </symbol>
+  <symbol id="i-time" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+</svg>

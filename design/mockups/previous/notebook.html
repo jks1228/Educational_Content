@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>학습 진단 목업 (1-A)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #FBFCFE;
+    --grid: #E3E9F2;
+    --grid-strong: #C9D6EA;
+    --ink: #1E2B4A;
+    --ink-soft: #55627F;
+    --marker: #FFE14D;
+    --marker-light: #FFF3B0;
+    --free: #1F7A4D;
+    --free-bg: #E3F4EA;
+    --error: #C8102E;
+    --focus: #2F6FED;
+    --control: #7A8AA8;
+    --link: #2457C5;
+    --desk: #EEF2F7;
+    --gap: 16px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--desk);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  /* ---------- 목업 갤러리 (설계 확인용 틀) ---------- */
+  .gallery-head {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 16px 8px;
+  }
+  .gallery-head h1 { font-size: 22px; margin: 0 0 4px; }
+  .gallery-head p { margin: 0; color: var(--ink-soft); font-size: 14px; max-width: 40em; }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
+    justify-content: center;
+    gap: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 16px 48px;
+  }
+  .frame { margin: 0; }
+  .frame figcaption {
+    font-size: 14px;
+    color: var(--ink-soft);
+    padding: 8px 4px 0;
+  }
+
+  /* ---------- 화면 = 모눈 노트 한 장 ---------- */
+  .screen {
+    position: relative;
+    min-height: 640px;
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    border: 1px solid var(--grid-strong);
+    border-radius: 6px;
+    padding: 16px 16px 96px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+  }
+  /* 노트 왼쪽 여백선 */
+  .screen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 24px;
+    width: 2px;
+    background: var(--grid-strong);
+  }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .back {
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font: inherit;
+    padding: 10px 8px 10px 0;
+    min-height: 44px;
+    cursor: pointer;
+  }
+  .steps { display: flex; gap: 4px; align-items: center; }
+  .steps span {
+    width: 18px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--grid-strong);
+  }
+  .steps span.done { background: var(--ink); }
+  .steps em { font-style: normal; margin-left: 6px; }
+
+  h2 { font-size: 22px; line-height: 1.35; margin: 0; font-weight: 700; }
+  h3 { font-size: 16px; margin: 0 0 8px; font-weight: 600; }
+  p { margin: 0; }
+  .soft { color: var(--ink-soft); font-size: 14px; }
+
+  /* 형광펜: 이 디자인의 단 하나의 강조 요소 */
+  .hl {
+    background: linear-gradient(100deg, transparent 2%, var(--marker) 4%, var(--marker) 96%, transparent 98%);
+    background-size: 100% 62%;
+    background-position: 0 85%;
+    background-repeat: no-repeat;
+    padding: 0 2px;
+  }
+  .hl-light {
+    background: linear-gradient(100deg, transparent 2%, var(--marker-light) 4%, var(--marker-light) 96%, transparent 98%);
+    background-size: 100% 62%;
+    background-position: 0 85%;
+    background-repeat: no-repeat;
+    padding: 0 2px;
+  }
+
+  /* 고지 상자 */
+  .note {
+    border-left: 3px solid var(--ink);
+    background: rgba(255, 255, 255, 0.85);
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  /* 주요 버튼 */
+  .primary {
+    position: absolute;
+    left: 36px;
+    right: 16px;
+    bottom: 20px;
+    min-height: 52px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--ink);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  button:focus-visible,
+  input:focus-visible + span,
+  a:focus-visible,
+  select:focus-visible,
+  input[type='text']:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  /* 칩 선택 (학년, 과목, 목적) */
+  fieldset { border: 0; padding: 0; margin: 0; }
+  legend { font-weight: 600; padding: 0; margin-bottom: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .chip span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 56px;
+    justify-content: center;
+    padding: 0 14px;
+    border: 1.5px solid var(--control);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .chip input:checked + span {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: #fff;
+    font-weight: 600;
+  }
+  .chip input:checked + span::before { content: '✓ '; white-space: pre; }
+
+  /* 성적 입력 */
+  .subject-block { border-top: 1px solid var(--grid-strong); padding-top: 12px; }
+  .subject-block legend { font-size: 16px; }
+  .field { display: grid; grid-template-columns: 1fr 96px; align-items: center; gap: 8px; margin-top: 6px; }
+  .field label { font-size: 15px; }
+  .field input {
+    min-height: 44px;
+    border: 1.5px solid var(--control);
+    border-radius: 8px;
+    padding: 0 10px;
+    font: inherit;
+    text-align: right;
+    background: #fff;
+    color: var(--ink);
+  }
+  .field input[aria-invalid='true'] { border-color: var(--error); }
+  .error {
+    color: var(--error);
+    font-size: 14px;
+    margin-top: 4px;
+    display: flex;
+    gap: 6px;
+  }
+  .error::before { content: '⚠'; }
+
+  /* 과목 탭 */
+  .tabs { display: flex; gap: 4px; border-bottom: 1.5px solid var(--grid-strong); }
+  .tabs button {
+    border: 0;
+    background: none;
+    font: inherit;
+    padding: 10px 12px;
+    min-height: 44px;
+    color: var(--ink-soft);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1.5px;
+    cursor: pointer;
+  }
+  .tabs button[aria-selected='true'] { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+  .tabs .done::after { content: ' ✓'; }
+
+  /* 3단계 영역 체크 */
+  .area { padding: 10px 0; border-bottom: 1px solid var(--grid); }
+  .area-name { font-size: 18px; font-weight: 600; margin-bottom: 6px; display: inline-block; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .seg label { position: relative; }
+  .seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .seg span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border: 1.5px solid var(--control);
+    border-radius: 8px;
+    background: #fff;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .seg input:checked + span { border: 2px solid var(--ink); font-weight: 600; }
+  .seg input:checked + span::before { content: '✓ '; white-space: pre; }
+  .seg .normal input:checked + span { background: var(--marker-light); }
+  .seg .weak input:checked + span { background: var(--marker); }
+  .tag { font-size: 13px; color: var(--ink-soft); border: 1px solid var(--grid-strong); border-radius: 4px; padding: 0 6px; background: #fff; }
+
+  /* 결과 */
+  .result-head { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--grid-strong); padding-top: 12px; }
+  .level { font-size: 14px; color: var(--ink-soft); }
+  .level strong { font-size: 28px; color: var(--ink); margin-left: 4px; }
+  .priority { list-style: none; padding: 0; margin: 8px 0 0; }
+  .priority li { padding: 6px 0; display: flex; justify-content: space-between; border-bottom: 1px solid var(--grid); }
+  .priority li span:last-child { font-size: 14px; color: var(--ink-soft); }
+  .summary-line { display: flex; justify-content: space-between; font-size: 15px; padding: 8px 0; border-top: 1px solid var(--grid); }
+
+  /* 추천 */
+  .rec-area { border-top: 1.5px solid var(--grid-strong); padding-top: 12px; }
+  .rec-area h3 { font-size: 18px; margin: 0; }
+  .direction { font-size: 14px; color: var(--ink-soft); margin: 2px 0 8px; }
+  .item { padding: 10px 0; border-bottom: 1px solid var(--grid); }
+  .item-kind { font-size: 13px; color: var(--ink-soft); display: flex; gap: 6px; align-items: center; }
+  .free { color: var(--free); background: var(--free-bg); border-radius: 4px; padding: 0 6px; font-weight: 600; }
+  .item-title { font-weight: 600; margin: 2px 0; }
+  .item dl { display: grid; grid-template-columns: auto 1fr; gap: 0 10px; margin: 4px 0; font-size: 14px; }
+  .item dt { color: var(--ink-soft); }
+  .item dd { margin: 0; }
+  .item-actions { display: flex; gap: 8px; margin-top: 6px; }
+  .link-btn, .ghost {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .link-btn { background: #fff; color: var(--ink); border: 1.5px solid var(--ink); font-weight: 600; }
+  .ghost { background: none; color: var(--ink); border: 1.5px solid var(--control); }
+  .checked-at { font-size: 13px; color: var(--ink-soft); }
+  .empty { background: rgba(255, 255, 255, 0.85); border: 1.5px dashed var(--control); border-radius: 8px; padding: 12px; font-size: 14px; }
+  .hidden-note { font-size: 14px; }
+  .hidden-note button { border: 0; background: none; color: var(--link); text-decoration: underline; font: inherit; padding: 10px 0; min-height: 44px; cursor: pointer; }
+  .feedback { border-top: 1.5px solid var(--grid-strong); padding-top: 12px; }
+  .feedback .row { display: flex; gap: 8px; margin-top: 8px; }
+  .feedback .row button { flex: 1; min-height: 44px; border: 1.5px solid var(--ink); background: #fff; border-radius: 8px; font: inherit; cursor: pointer; }
+
+  .start-title { font-size: 26px; line-height: 1.35; margin-top: 48px; }
+
+  @media (max-width: 400px) {
+    .gallery { padding: 0 0 32px; gap: 24px; grid-template-columns: 1fr; }
+    .gallery-head { padding: 16px; }
+    .screen { border-radius: 0; border-left: 0; border-right: 0; }
+    .frame figcaption { padding: 8px 16px 0; }
+  }
+
+  /* 형광펜 칠하기 효과(사용자가 "약함"을 누를 때)는 1-B에서 구현합니다. 정적 목업에는 넣지 않았습니다. */
+</style>
+</head>
+<body>
+
+<header class="gallery-head">
+  <h1>학습 진단 목업 (1-A)</h1>
+  <p>대표 사용 상황 3 예시: 고3, 내신 2등급(9등급제)과 모의고사 4등급, 학습 목적 "둘 다", 영어 독해 약함. 추천 항목은 가상 데이터입니다.</p>
+</header>
+
+<main class="gallery">
+
+  <!-- S0 시작 -->
+  <figure class="frame">
+    <section class="screen" aria-labelledby="s0-title">
+      <h2 id="s0-title" class="start-title">어디부터 공부할지,<br>약한 곳부터 같이 찾아요</h2>
+      <p>성적과 약하다고 느끼는 단원을 체크하면, 수준에 맞는 강의와 책을 골라 드려요. 5~10분 걸려요.</p>
+      <p class="note">이름이나 학교는 묻지 않아요. 입력한 성적은 이 화면 안에서만 계산하고 어디에도 저장하거나 보내지 않아요.</p>
+      <p class="soft">지원 과목: 국어, 영어, 수학 (중1~고3)</p>
+      <button class="primary" type="button">진단 시작하기</button>
+    </section>
+    <figcaption>S0 시작: 설명과 개인정보 고지</figcaption>
+  </figure>
+
+  <!-- S1 기본 정보 -->
+  <figure class="frame">
+    <section class="screen" aria-labelledby="s1-title">
+      <div class="topbar">
+        <button class="back" type="button">← 뒤로</button>
+        <div class="steps" role="img" aria-label="5단계 중 1단계"><span class="done"></span><span></span><span></span><span></span><span></span><em>1/5</em></div>
+      </div>
+      <h2 id="s1-title">학년과 과목을 골라 주세요</h2>
+      <fieldset>
+        <legend>학년</legend>
+        <div class="chips">
+          <label class="chip"><input type="radio" name="grade"><span>중1</span></label>
+          <label class="chip"><input type="radio" name="grade"><span>중2</span></label>
+          <label class="chip"><input type="radio" name="grade"><span>중3</span></label>
+          <label class="chip"><input type="radio" name="grade"><span>고1</span></label>
+          <label class="chip"><input type="radio" name="grade"><span>고2</span></label>
+          <label class="chip"><input type="radio" name="grade" checked><span>고3</span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>진단할 과목 <span class="soft">(여러 개 고를 수 있어요)</span></legend>
+        <div class="chips">
+          <label class="chip"><input type="checkbox" checked><span>국어</span></label>
+          <label class="chip"><input type="checkbox" checked><span>영어</span></label>
+          <label class="chip"><input type="checkbox" checked><span>수학</span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>지금 준비하는 시험은 무엇인가요?</legend>
+        <div class="chips">
+          <label class="chip"><input type="radio" name="purpose"><span>내신 대비</span></label>
+          <label class="chip"><input type="radio" name="purpose"><span>수능 대비</span></label>
+          <label class="chip"><input type="radio" name="purpose" checked><span>둘 다</span></label>
+        </div>
+      </fieldset>
+      <button class="primary" type="button">다음</button>
+    </section>
+    <figcaption>S1 기본 정보: 고등학생이면 학습 목적이 나타남</figcaption>
+  </figure>
+
+  <!-- S2 성적 -->
+  <figure class="frame">
+    <section class="screen" aria-labelledby="s2-title">
+      <div class="topbar">
+        <button class="back" type="button">← 뒤로</button>
+        <div class="steps" role="img" aria-label="5단계 중 2단계"><span class="done"></span><span class="done"></span><span></span><span></span><span></span><em>2/5</em></div>
+      </div>
+      <h2 id="s2-title">최근 성적을 적어 주세요</h2>
+      <p class="soft">내신과 모의고사 중 아는 것만 적어도 돼요. 고3 내신은 1~9등급이에요.</p>
+
+      <fieldset class="subject-block">
+        <legend>영어</legend>
+        <div class="field"><label for="en-n">내신 등급</label><input id="en-n" type="text" inputmode="numeric" value="2"></div>
+        <div class="field"><label for="en-m">모의고사 등급</label><input id="en-m" type="text" inputmode="numeric" value="4"></div>
+      </fieldset>
+
+      <fieldset class="subject-block">
+        <legend>수학</legend>
+        <div class="field"><label for="ma-n">내신 등급</label><input id="ma-n" type="text" inputmode="numeric" value="3"></div>
+        <div class="field"><label for="ma-m">모의고사 등급</label><input id="ma-m" type="text" inputmode="numeric" value="12" aria-invalid="true" aria-describedby="ma-m-err"></div>
+        <p class="error" id="ma-m-err">모의고사 등급은 1부터 9까지 적을 수 있어요. 지금 적은 값: 12</p>
+      </fieldset>
+
+      <fieldset class="subject-block">
+        <legend>국어</legend>
+        <div class="field"><label for="ko-n">내신 등급</label><input id="ko-n" type="text" inputmode="numeric" value="3"></div>
+        <div class="field"><label for="ko-m">모의고사 등급</label><input id="ko-m" type="text" inputmode="numeric" placeholder="비워 둠" aria-describedby="ko-m-hint"></div>
+        <p class="soft" id="ko-m-hint">모르면 비워 두세요.</p>
+      </fieldset>
+      <button class="primary" type="button">다음</button>
+    </section>
+    <figcaption>S2 성적: 범위를 벗어난 값은 빨간 안내 문장, 고치기 전에는 다음으로 못 감 (S4는 고친 뒤 상태)</figcaption>
+  </figure>
+
+  <!-- S3 영역 체크 -->
+  <figure class="frame">
+    <section class="screen" aria-labelledby="s3-title">
+      <div class="topbar">
+        <button class="back" type="button">← 뒤로</button>
+        <div class="steps" role="img" aria-label="5단계 중 3단계"><span class="done"></span><span class="done"></span><span class="done"></span><span></span><span></span><em>3/5</em></div>
+      </div>
+      <h2 id="s3-title">약하다고 느끼는 곳을 표시해 주세요</h2>
+      <div class="tabs" role="tablist" aria-label="과목">
+        <button role="tab" aria-selected="false" class="done" type="button">국어</button>
+        <button role="tab" aria-selected="true" type="button">영어</button>
+        <button role="tab" aria-selected="false" type="button">수학</button>
+      </div>
+      <p class="soft">영어 <span class="tag">2015 개정</span> &nbsp;학교마다 배우는 학년이 다를 수 있어요. 지금 배우는 과목 기준으로 체크해 주세요.</p>
+
+      <div class="area" role="radiogroup" aria-labelledby="a1">
+        <span class="area-name" id="a1"><span class="hl-light">어휘</span></span>
+        <div class="seg">
+          <label class="confident"><input type="radio" name="a1"><span>자신 있음</span></label>
+          <label class="normal"><input type="radio" name="a1" checked><span>보통</span></label>
+          <label class="weak"><input type="radio" name="a1"><span>약함</span></label>
+        </div>
+      </div>
+      <div class="area" role="radiogroup" aria-labelledby="a2">
+        <span class="area-name" id="a2">문법</span>
+        <div class="seg">
+          <label class="confident"><input type="radio" name="a2" checked><span>자신 있음</span></label>
+          <label class="normal"><input type="radio" name="a2"><span>보통</span></label>
+          <label class="weak"><input type="radio" name="a2"><span>약함</span></label>
+        </div>
+      </div>
+      <div class="area" role="radiogroup" aria-labelledby="a3">
+        <span class="area-name" id="a3"><span class="hl">독해</span></span>
+        <div class="seg">
+          <label class="confident"><input type="radio" name="a3"><span>자신 있음</span></label>
+          <label class="normal"><input type="radio" name="a3"><span>보통</span></label>
+          <label class="weak"><input type="radio" name="a3" checked><span>약함</span></label>
+        </div>
+      </div>
+      <div class="area" role="radiogroup" aria-labelledby="a4">
+        <span class="area-name" id="a4"><span class="hl-light">듣기</span></span>
+        <div class="seg">
+          <label class="confident"><input type="radio" name="a4"><span>자신 있음</span></label>
+          <label class="normal"><input type="radio" name="a4" checked><span>보통</span></label>
+          <label class="weak"><input type="radio" name="a4"><span>약함</span></label>
+        </div>
+      </div>
+      <button class="primary" type="button">다음</button>
+    </section>
+    <figcaption>S3 영역 체크: 약함은 형광펜, 보통은 연한 형광펜</figcaption>
+  </figure>
+
+  <!-- S4 진단 결과 -->
+  <figure class="frame">
+    <section class="screen" aria-labelledby="s4-title">
+      <div class="topbar">
+        <button class="back" type="button">← 뒤로</button>
+        <div class="steps" role="img" aria-label="5단계 중 4단계"><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span></span><em>4/5</em></div>
+      </div>
+      <h2 id="s4-title">진단 결과</h2>
+
+      <div class="result-head">
+        <h3>영어</h3>
+        <p class="level">수준 <strong><span class="hl">중</span></strong></p>
+      </div>
+      <p class="soft">모의고사 4등급(중)이 내신 2등급(상)보다 낮아서, 중 수준으로 봤어요. 둘 다 준비한다고 골랐기 때문이에요.</p>
+      <div>
+        <h3>먼저 볼 영역</h3>
+        <ul class="priority">
+          <li><span class="hl">독해</span><span>약함</span></li>
+          <li><span class="hl-light">어휘</span><span>보통</span></li>
+          <li><span class="hl-light">듣기</span><span>보통</span></li>
+        </ul>
+      </div>
+      <div>
+        <p class="summary-line"><span>국어</span><span>수준 중, 약함 1개</span></p>
+        <p class="summary-line"><span>수학</span><span>수준 중, 약함 2개</span></p>
+      </div>
+      <p class="note">수준을 나누는 기준은 아직 임시 기준이에요. 결과는 내가 직접 체크한 내용을 바탕으로 해요.</p>
+      <button class="primary" type="button">추천 보기</button>
+    </section>
+    <figcaption>S4 진단 결과: 수준의 근거와 먼저 볼 영역</figcaption>
+  </figure>
+
+  <!-- S5 추천 -->
+  <figure class="frame">
+    <section class="screen" aria-labelledby="s5-title">
+      <div class="topbar">
+        <button class="back" type="button">← 뒤로</button>
+        <div class="steps" role="img" aria-label="5단계 중 5단계"><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><em>5/5</em></div>
+      </div>
+      <h2 id="s5-title">추천</h2>
+      <div class="tabs" role="tablist" aria-label="과목">
+        <button role="tab" aria-selected="false" type="button">국어</button>
+        <button role="tab" aria-selected="true" type="button">영어</button>
+        <button role="tab" aria-selected="false" type="button">수학</button>
+      </div>
+
+      <div class="rec-area">
+        <h3><span class="hl">독해</span> <span class="soft">약함</span></h3>
+        <p class="direction">개념 정리 강의 + 유형별 문제집</p>
+
+        <article class="item">
+          <p class="item-kind"><span class="free">무료</span> 강의</p>
+          <p class="item-title">(가상) 수능 영어 독해 개념 정리</p>
+          <dl>
+            <dt>제공처</dt><dd>(가상) 공공 교육방송</dd>
+            <dt>대상</dt><dd>고3, 난이도 중</dd>
+            <dt>추천 이유</dt><dd>주제·요지를 찾는 순서를 처음부터 다시 정리해 줘요.</dd>
+          </dl>
+          <p class="checked-at">2026년 11월 9일에 확인한 정보예요</p>
+          <div class="item-actions">
+            <a class="link-btn" href="https://example.com/" target="_blank" rel="noopener noreferrer">새 탭에서 보기</a>
+            <button class="ghost" type="button">숨기기</button>
+          </div>
+        </article>
+
+        <article class="item">
+          <p class="item-kind">책</p>
+          <p class="item-title">(가상) 영어 독해 유형별 문제집</p>
+          <dl>
+            <dt>출판사</dt><dd>(가상) 예시출판</dd>
+            <dt>대상</dt><dd>고3, 난이도 중</dd>
+            <dt>추천 이유</dt><dd>유형별로 묶여 있어 강의 뒤에 바로 연습하기 좋아요.</dd>
+          </dl>
+          <p class="checked-at">2026년 11월 9일에 확인한 정보예요</p>
+          <div class="item-actions">
+            <a class="link-btn" href="https://example.com/" target="_blank" rel="noopener noreferrer">새 탭에서 보기</a>
+            <button class="ghost" type="button">숨기기</button>
+          </div>
+        </article>
+        <p class="hidden-note">숨긴 항목 1개 <button type="button">다시 보기</button></p>
+      </div>
+
+      <div class="rec-area">
+        <h3><span class="hl-light">어휘</span> <span class="soft">보통</span></h3>
+        <p class="direction">유형 연습 강의 + 기본 문제집</p>
+        <p class="empty">이 영역에 맞는 추천을 아직 준비하고 있어요. 다른 영역 추천을 먼저 확인해 주세요.</p>
+      </div>
+
+      <div class="feedback">
+        <h3>추천이 도움이 됐나요?</h3>
+        <div class="row"><button type="button">예</button><button type="button">아니요</button></div>
+      </div>
+      <button class="primary" type="button">결과 인쇄하기</button>
+    </section>
+    <figcaption>S5 추천: 과목 탭, 무료 강의 먼저, 준비 중 안내, 숨기기와 인쇄(P1)</figcaption>
+  </figure>
+
+  <!-- 예외: 한 과목의 모든 영역이 "자신 있음" -->
+  <figure class="frame">
+    <section class="screen" aria-labelledby="sx-title">
+      <div class="topbar">
+        <button class="back" type="button">← 뒤로</button>
+        <div class="steps" role="img" aria-label="5단계 중 4단계"><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span></span><em>4/5</em></div>
+      </div>
+      <h2 id="sx-title">진단 결과</h2>
+      <div class="result-head">
+        <h3>수학</h3>
+        <p class="level">수준 <strong><span class="hl">중</span></strong></p>
+      </div>
+      <p class="soft">내신 3등급(5등급제)이라 중 수준으로 봤어요.</p>
+      <p class="note">모든 영역에 자신 있다고 했어요. 그래서 약한 영역 대신, 지금 수준에서 한 단계 더 연습할 자료를 과목 전체로 골랐어요.</p>
+      <div class="rec-area">
+        <h3>수학 전체</h3>
+        <p class="direction">유형 연습 강의 + 기본 문제집</p>
+        <p class="soft">S5에서 과목 전체에 강의 1~2개, 책 1~2권을 한 묶음으로 보여 줘요.</p>
+      </div>
+      <button class="primary" type="button">추천 보기</button>
+    </section>
+    <figcaption>예외 (다른 학생 예: 고1): 수학 모든 영역이 자신 있음</figcaption>
+  </figure>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,1524 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-11",
+  "note": "추천 후보를 찾을 때 쓰는 허용 목록. 여기 있는 채널·출판사의 결과만 후보가 된다. 상업 인강·학원 채널은 넣지 않는다(PRD 광고 배제). verify=true 는 [확인 필요].",
+  "youtubeChannels": [
+    {
+      "id": "UCDkTanNuZGwYtf-Y6_xBmqw",
+      "name": "EBSi",
+      "handle": "@EBSi",
+      "school": "high",
+      "free": true,
+      "evidence": "youtube.com/channel/UCDkTanNuZGwYtf-Y6_xBmqw 채널 페이지 (2026-11-11 검색 결과), EBS 보도자료 기사에서 EBSi 유튜브 채널로 소개",
+      "verify": false
+    },
+    {
+      "id": "UC-B17kqPiZgzeLq86X9RjTw",
+      "name": "EBS 중학프리미엄",
+      "school": "middle",
+      "free": true,
+      "evidence": "youtube.com/channel/UC-B17kqPiZgzeLq86X9RjTw 채널 페이지, mid.ebs.co.kr 이벤트 안내에서 'EBS중학&프리미엄' 채널로 연결",
+      "verify": true,
+      "verifyNote": "EBS 중학프리미엄은 2023-07-17 전면 무료 전환(방송통신위원회 보도자료 2023-07-14). 사이트 프리패스 무료 기간이 2025-12-31까지로 공지됐고 2026년은 재공지 예정이라 [확인 필요]. YouTube 공개 영상은 무료"
+    }
+  ],
+  "otherChannels": [
+    {
+      "id": "UC7011LEejSIsINQkCqcmHcQ",
+      "name": "정기천 수학 [Jung gi cheon math]",
+      "handle": "",
+      "school": "",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCN-mcnnzn0WF9gIntjO74Tw",
+      "name": "한쌤 TV_수학 가르치는 한쌤",
+      "handle": "@hanssamTV",
+      "school": "",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCWXkb0oVXLEycpk8XQ2R-1A",
+      "name": "김쌤수학",
+      "handle": "@mathkim63",
+      "school": "",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCAaG99KK--o37ZoYxvYdkwA",
+      "name": "설레는 수학",
+      "handle": "@1200math",
+      "school": "",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC-JSzYAYzGI19jPtanJ3mEQ",
+      "name": "이현호(미친국어)",
+      "handle": "@michinKorean",
+      "school": "",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCihruK1pwJPsukySPatFgsQ",
+      "name": "혼공TV(혼공쌤)",
+      "handle": "",
+      "school": "",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCokSmriiLfoQDw0XPvMz04Q",
+      "name": "강남인강",
+      "enabled": false,
+      "addedAt": "2026-11-12",
+      "offNote": "2026-11-12 표본 검사: 유료 서비스(무료는 지원 대상만) — 사용자 판단 대기"
+    },
+    {
+      "id": "UCmTfcCiq4M77TL2lV6f3Wuw",
+      "name": "우프 사이버스쿨",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCz864-2U8Vry2GhJbc8Ffyw",
+      "name": "베스트최현숙영어학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCzWhNn2cvx5waerz7TbJgAA",
+      "name": "골라줄게 영어책",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCJboQrwyDNtmXMTrMAW3IMw",
+      "name": "이나클라쓰",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCUspVBrG5ouJKDFNre8NSsA",
+      "name": "오피스에듀화상과외",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCpB_K-_cJilOucfaCqxI9kA",
+      "name": "감각영어학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC7GbL3IEFfEvXrFXHqtnNaQ",
+      "name": "교실밖 소통",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCt9ZxGOjpsw91E3T4pO2D-Q",
+      "name": "개십다 [개념 10분 다지기]",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCDwnYtYHG0i8wavK9JQQ50Q",
+      "name": "더본교육",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCWqHm4u7junEcXkNKy6WEgw",
+      "name": "쪄니쌤의 수학교실",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC9pkCDuMjFArWZ1HJfjeFgA",
+      "name": "지훈쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCRHwpkduY2vXgOZSSCC8G5A",
+      "name": "보이는 수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCuGut-ayvTwA9E9Wjnk2wvg",
+      "name": "보고가람",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCxx_BdPT1EUkvIsjb0rEG_A",
+      "name": "동근쌤TV",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCTDN2Xzt8gOSpFV5vhHhSoA",
+      "name": "맥수학_official",
+      "enabled": false,
+      "addedAt": "2026-11-12",
+      "offNote": "2026-11-12 표본 검사: 초등 홍보형 재생목록 — 확인 전까지 끔"
+    },
+    {
+      "id": "UCAx_YitLGMOAXuzHFGBMqTg",
+      "name": "휴쌤수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC5R8_OeyByiCZAq0Dq6cRqA",
+      "name": "물리와 수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCtwigRkkLOnEgX-gRW4v7Ag",
+      "name": "정원의방정식",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCGIoE4AENBH9r2RBFv7I-ww",
+      "name": "또쌤 수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCFnFYTbEaFvF5IwxZZjWQfQ",
+      "name": "은규쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCtOIWOJtwTAIYtEoPpKxFnw",
+      "name": "친절한 휘쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCp-Jyf748NfNJchW53u1fRg",
+      "name": "김광우 원리 수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCTMdZsIIihVIO3n2rEJ6RhQ",
+      "name": "강의용",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCH3Fa9GVYVNaP0MGyXslgSQ",
+      "name": "플레이스터디",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC4mj8cIyy2uMux2w2jVHb_w",
+      "name": "셀프수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCVfHp1uJrmsGaZvENZ7Xj1g",
+      "name": "그릿PT수학 김광호 선생님의 강의녹방",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCNQcPFaGrgf57DUCcinQxqQ",
+      "name": "시작수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCIv1pzNj61Q8HuCrFIUBYnQ",
+      "name": "동아샘",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC9_pqRYocQHRracQSK4DVZQ",
+      "name": "보다수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCTCKKPaU-CyUkkfrYRbx9Dw",
+      "name": "루트쌤수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC6sO2sWcINVIH2DYYm94h3Q",
+      "name": "전성학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCc0CVLtxzMSyr07q6xbXzHA",
+      "name": "슈퍼에스",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCvKO8I7qXjiAXEld8cm8lPw",
+      "name": "청맥수학학원본관",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCjCvczqATvbQcP5UL1BYlPg",
+      "name": "어흥범",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCzc_51VBOQ_IhVL6Elkvoyw",
+      "name": "온탑수학학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC1ZzdVkKGAc3PFu6q3G5TrA",
+      "name": "디테일수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCT3a5ZRXZ0mJ-gKwyR73G1Q",
+      "name": "강쌤수학학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCm0pEstcmgy6qnlujPdxegQ",
+      "name": "더 빛날 미래",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCBfUFvSrVh1Rd-nMlACZVHw",
+      "name": "아람치",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCzRwVpnsQHaf3u_GGVmsXJA",
+      "name": "올인수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCom4azn3sL6dpDBaXLrT-cg",
+      "name": "나무아카데미NamuAcademy",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCzoUtKdAHQSYAK-cq45expg",
+      "name": "꽁스국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCz4iYit-0O1hndjVciRQ-_Q",
+      "name": "얼룩말국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCqSYe-JpA03RvjJNhJnyeNw",
+      "name": "Mr.B의 국어교실",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCSFnpwuWLRn58SFhJgSvOaA",
+      "name": "정수영깡TV",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCcEp5Iq-UrSwMVVdayGbDEQ",
+      "name": "희연쌤의 국어파티",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCkfnv9XyFsRO6cdIENUoJLg",
+      "name": "국어의 시작",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCKQuNEBVUwRPxMVmAM6a3cg",
+      "name": "목동키국어영어학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCP6ssZmFcs3DpPZEGTGzNmQ",
+      "name": "꿈을담는틀국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCOCbuOaEHuqtUfiU7Bo5BCw",
+      "name": "록샘국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCzPeO2oPvLRh0jCK2YJuNeQ",
+      "name": "나랏말쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCl_tB4AqPkkxuYcJQHz6dMw",
+      "name": "EBSCulture (EBS 교양)",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCKDzLYIybrvX7QCFsrlOHmQ",
+      "name": "양병철국어,인문논술",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCdqcmBrSU4PHhUTEC4-BbNg",
+      "name": "종기리TV",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UChnhheqev_CWRorO35nA6-Q",
+      "name": "센텐오영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCVtV_8oI-QWpQrJ0PDesATQ",
+      "name": "영어중독 예린쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCsJ4rZUhIEiDeFHYgsBM9Fw",
+      "name": "데릭 영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCbt9l-hZjsOcPESfCFdpxMg",
+      "name": "더마스터영어발전소",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UChMg4G3vV0B7IjqDVS1SZ3w",
+      "name": "수학선생 천선생",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCn6kLpi_cK0CpdAjc2diP4g",
+      "name": "PTM 수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCNLHW3uEk5fiJitpu970tNQ",
+      "name": "로즈윌 학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCK4NmS9R8tsRe5guOCKU1rA",
+      "name": "Heony math 시헌쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCm1SLqWlrLar7rL0K_m9OsQ",
+      "name": "윤박사수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCVC7o80a85nipudR7dEv3ig",
+      "name": "올마이티수학과학센터",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCSn_B5YIUI9smBzRwczxmQQ",
+      "name": "원주이루다영어수학학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UChu25pJgVZB3p0dVEgmU0PQ",
+      "name": "메타코드M",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC4H2Nx6yJRW2DN77gOK9XDw",
+      "name": "바풀수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCR7Da7oeZFf2XAV076bsWCQ",
+      "name": "인천광역시교육청",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCq_dEl3OX1PZ2ss0FfT0d0w",
+      "name": "청춘국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC83b83cqneFT3KxZaglAzDA",
+      "name": "국어수호즈",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCCUrsyYygbh3NmYEAKRskCw",
+      "name": "침산동 국어김성식",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCgcTW1Rpd600IEgbyLL3tnA",
+      "name": "이유진 국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC-DfdpjTckDeTHc_ETXrc6A",
+      "name": "훈샘국어TV",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCcDz72Vic8ILPpIhcFWdkvA",
+      "name": "공무원 교육1위 해커스공무원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UClwaq_wLI6ge1lA0j_mz_GQ",
+      "name": "박민석",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCMaGeOktUALPObieT_s_fXQ",
+      "name": "이엘리",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCOZlJ9SEq_IeD4xiaFENyWg",
+      "name": "불휘기픈국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCn8upg5WRf4eQroFFK6hsow",
+      "name": "제욱쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCZ38lnaU-ZxaDzkD2Ims_SA",
+      "name": "한의대 정선배",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCtihpW2m2esqdUYGxGzp_KQ",
+      "name": "정미영의 매튜효과",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCB_yl_dI0YQyBhg_SX2skVw",
+      "name": "배인호 국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCpi9Z1NfH1oxw-A1NayqHJg",
+      "name": "대동 이룸학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC2af4pIUQtjCs9w0VU_cEig",
+      "name": "[오름] 은규T 국어연구소",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCq5x9RVzxuDlBVaQL9ucA6A",
+      "name": "이승희TV",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCdrd40HlXCgm9-Q_PMmxySQ",
+      "name": "JK English",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCZt1UIks5H8J2RL6_COCkqg",
+      "name": "설명요정 English Again",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCjmY2zd_J1ONnyyXedvedhg",
+      "name": "미니멀영어 Minimal English",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC4Y4DvQozKRxSfORvZpM5ww",
+      "name": "결국엔 성정혜 영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC0Wy2BjhsQP3gk2iuksCudw",
+      "name": "에스텔잉글리쉬EstellEnglish",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCqQR8b-MTXuMgrV7scZfq_w",
+      "name": "어션영어BasicEnglish",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCWbdX2OQlZkpXBw9M21pjzQ",
+      "name": "프랭크쌤영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCmjwMlVeo5DoH8xCmMQlVgA",
+      "name": "해커스톡 기초영어회화 공식 유튜브",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCsLgKKiv8kDDGy1stC8BxVA",
+      "name": "공부의신 강성태",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCJJv5M4cirGff57vqG2MLjg",
+      "name": "서아쌤의 비밀과외",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCvFPLBR0uO5uR_XeaXtrelw",
+      "name": "최주현",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCIG4glyqEMU8pChj0Rs8jnA",
+      "name": "최명석수학공화국",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCfgBkf9RPiQurvJQtJuXy5A",
+      "name": "씽커즈",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCGpkyfgmf6-Kfbrh-6t5ZbQ",
+      "name": "필즈수학전문학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCJ6QqxQ7am8YGVwRI5Rgjng",
+      "name": "효원쌤클래스",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCA6XSx2NE-7jEVMNHYbdCEQ",
+      "name": "노베이스안경잡이카피바라",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCsgV-tBzQvLE3qMRVy_OSqw",
+      "name": "CNK수학학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCrdxYqjIqNwa8f6pobLd1Mg",
+      "name": "용쓰매쓰",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCudGH0bl44LtLfbj-YdTxvA",
+      "name": "수학 맛집",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCEjubgYFUVsHHYgetwZ7h_A",
+      "name": "[최영석T] 펀한수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC6IlJPk_V-ZkNIj40w-4d4g",
+      "name": "수학하는 상현쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCEVbsQ7o6r0EQ1RShEUA0iQ",
+      "name": "김현빈 수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCM6wz_VVKrZUGosd2naQKFA",
+      "name": "솩솩솩",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC-7H7ZImLfGF97Y_EJ0vZzA",
+      "name": "이상엽Math",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCgaFOkvt0oxkUV1KeSADUyA",
+      "name": "공학수학 가르치는 화공엔지니어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCwP800zdp_onCQLNSQ-LcIA",
+      "name": "군산뻔뻔수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCHrUpGXLmg1YCuN9jL6-B1g",
+      "name": "수학지능 오정대TV",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCYJ-P9l33rQ01vbkRPIMJLA",
+      "name": "수리학당_매쓰크라테스",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCJ057S8zAxJUDGXtwY--VAg",
+      "name": "최재석",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UClUpkEVaSR1qAg3Kd1d35Qw",
+      "name": "매력안동욱매력",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCrEYhXaFqlcnxn1wpsiUKEg",
+      "name": "김가경 국어 연구소",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC1MN_3T2MMUh9c4RhIdJNjw",
+      "name": "권oh",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCgIoKolHYoQEg_AYZCEgOQQ",
+      "name": "신진욱 국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC1Pe0j-OODMpVzC6bfM-PPw",
+      "name": "혜윰국어클립",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCoK8P455pwUsAbpt6_thErg",
+      "name": "훈쌤국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCs-EMBgVakYoJUB9Kk-TK8g",
+      "name": "구켠TV",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCWdlerbf6y5fSfS4eSedtVA",
+      "name": "서우진",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCm6L6YtZnFNKhxpMSoGb7PA",
+      "name": "국S (국스) : 국어 STUDY",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCOhb3iRGCNquGtuKv183k0w",
+      "name": "세계최강국어 조인수tr",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC1HVYwkrq245QH2Xth15LjQ",
+      "name": "세일 국윤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCAjJlJ2_eVKi4UPcUA5Xvpw",
+      "name": "알맹이국어TV _  이경복 공무원국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCPExP1IyOQtWriDThMfis_w",
+      "name": "최창희 국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC2jFEQuavHl7hWW6XVLJvYg",
+      "name": "대한민국 NO.1 국어 합격신화 양철식",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCpfnLfbeALZqwO52KHwcMZA",
+      "name": "사계 국기훈 기파랑",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCIKenSltO4ng7nxPRqAHiag",
+      "name": "Mind Mind",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCjSGdyH80kqpZ0JriaFCjkQ",
+      "name": "[국어 생각쌤]생각하고 또 생각하면 해답이",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCil4htwZbghGbwzgevVvHuQ",
+      "name": "김길도",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC338ARG-qg6E-JQazyu10Jw",
+      "name": "스마트해법영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UClPWDge6kFVESzlzcuXKJfw",
+      "name": "친절한 대학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC0eZuKTP1pcMIENI3fqwN3g",
+      "name": "말트영어(기초&여행&생활영어)",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCggR1BSIKXtIT6nMhcvzFYA",
+      "name": "1일1영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCRK_M8zKoxiMMmRcnt_Eb9g",
+      "name": "션 파블로 Sean Pablo",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCXmJ5425GeB-9u3oeRh1FEA",
+      "name": "꾸준로그",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCDwocU-T3PPaB075K_PbUHA",
+      "name": "영어말하기-Speak English",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCYdolXPDoWMQMBLfdHQaWPw",
+      "name": "노마쌤 - 즐거운 영어 습관",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCTYQzAi6YOcgv2mkzsfzmpA",
+      "name": "Kendra's Language School",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCWZFthA04LiviCNl33-2-Jw",
+      "name": "와이쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCBOijER_BQSZ7jueN2I9MzQ",
+      "name": "[이충권TV] 해석이 잘 되는 영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCTdflp7iCb0qj61On66yOAw",
+      "name": "토익은 역시 1위 해커스토익",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCgqj2htG_G4VmPATB3Y9tqg",
+      "name": "정재현영어꿀단지",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCWFtQW6qyiYJZNKUO6cm-LA",
+      "name": "성문출판사",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC7qi7lteNLgWjZ3u1UQSrgg",
+      "name": "또선생",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC8vGrUWQreLrPJoIctrBPRA",
+      "name": "5분구이영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCVx4F1xnH8ttx-w5MUL3OdQ",
+      "name": "영어과외TV",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCsWyruoEM_h0A_y2lpPYqTw",
+      "name": "지안라이트",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC_hxQxDCLpb8MRYDgcsDevA",
+      "name": "김광진 영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCrXgigvE_ZiNoVIZsbodA-A",
+      "name": "영어 루틴 쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCpYR3yhMVuzh5YmGJR8LMWQ",
+      "name": "Eunah Lee",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCQJ01PiNU-8d8DKtrNGM6hQ",
+      "name": "친절한 영어쌤♥",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCp8vKoMsJAyO0GnDXAXyAyA",
+      "name": "배리",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCrbNMOagCcoNHEcYr2-eyzA",
+      "name": "은재쌤 영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCdHVJ6jrjm8EeLuamOX-7EQ",
+      "name": "한마디로TV",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCp71t6NGukNhcAckG02Wk2A",
+      "name": "정혜영",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC9GNFyB0kVIaE4RZB6BP90g",
+      "name": "영어강사YC",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC_MA4dr08pb5A-PVTGdU7FA",
+      "name": "더올라영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCAgFyrAQPisZaJbOAwzM6aw",
+      "name": "마더텅 고등",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCEncf4WQndbw-QQC_dgrmLw",
+      "name": "세이쌤 영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCXuT3Ez-YUgedjdhf44MODQ",
+      "name": "소방단기",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCzCEO988Za4FzsxJC_3Nbvw",
+      "name": "수능영어 마인드셋",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCuHra9UCqOvSxa1uzBTgVfA",
+      "name": "구성연 매니저",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCYbYM--KzmVGjPEFyAXATMg",
+      "name": "수능 영어 논리독해 전문 채널",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCeQKWQ1GO9G1k_1EEE7HGoQ",
+      "name": "김혜린 영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCwpuI8E9vma07_rc9Y22lUA",
+      "name": "구튜브[9tube]",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCma37fJBlF718VRgGlx4yGA",
+      "name": "theMEGASTUDY",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCRQJGdbRQQDNQDcZbsIX9YQ",
+      "name": "대치동 전문가들",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCpSw7xyR5nnZmENdIShMzSQ",
+      "name": "김태민 영어 / 인지학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCBfRtqsaTiMVJTKTiV9UhAQ",
+      "name": "이움학원 : 스몽디",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCDrRFkOXKPdwQEKYtmrOBsw",
+      "name": "영어는V김지영",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCoCnH-MZVVnggt3kSaxwBTQ",
+      "name": "에어클래스",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC_qXPdDC3WtJPUGgzDrtgrg",
+      "name": "노원 수능 영어 과외  T.V 👨‍🎓",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCeF6uIyeYn9ovkM0ygExf1Q",
+      "name": "최고의강의&철저한관리 송유근영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCcgByVoc6RScXygnsL4N59Q",
+      "name": "신영어쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCMY9yzHRWDowa9fu1NpJauA",
+      "name": "왕쉬운 영어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC7vOZSIP0ffzskrWccqgiXw",
+      "name": "히즈어학원",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCPCJyTEU6kdFNzooDoW_i1A",
+      "name": "더미라클영어 (The Miracle English)",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC8ksbVHkR26plmw5hbRNvuw",
+      "name": "수학의 필연성 서하쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCkf0Gyv50A1EyiVbA5bDfXg",
+      "name": "취미수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCFGktFFObb3Pzvv1ilR41zA",
+      "name": "빠른수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCmR_npXCHtvQC6eUNcR3n2g",
+      "name": "새로이종남T",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCgnKD5cgBL4DtD7Pv-19Dkw",
+      "name": "소수쌤사랑수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCvtq8Yrmr6HqyYbETei4KIQ",
+      "name": "김재하수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCGcosvGguLWQEUJ2bD08Pyw",
+      "name": "친절한 변쌤",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCfVhArkI9XUrNKFNmOTIILg",
+      "name": "사오수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCUj6rrhMTR9pipbAWBAMvUQ",
+      "name": "침착맨",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC0QTyMNsJuFiWvmYqS_QTwQ",
+      "name": "춤추는 가우수",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC19QFAAc-NiUWK8JuUKfeog",
+      "name": "수학의 자부심",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UC3QYqW307eKMLiahGlHqoUA",
+      "name": "더하기빼기",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCv5nDb4VlrgHD2_czBU3PPw",
+      "name": "제주꼼수학",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCDYuZXOYG79LLM6aV9UTOyw",
+      "name": "수학쌤Zio",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCmPHrR0nypa_5b9OZjA_dOQ",
+      "name": "한석만TV",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCdw2m9EufhuG0GWGwdsBubQ",
+      "name": "나눔과성장",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCevFAWjnE1uv_zKxDTLpMlw",
+      "name": "권태원큐스터디_mathlatte",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCFiJco03lfmBGBzwuOa3SUg",
+      "name": "서용범",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCDyYm54FjTX0coOnx-u6YZg",
+      "name": "배기동팬클럽",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCy050Hk0_RS3TGP4zeojbdA",
+      "name": "국어팜",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCdK3fJNq52dXtZcsypKDgxg",
+      "name": "열린국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCSK6N6IHEkrZz7YsDZPeh7Q",
+      "name": "KSY",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCdWelIWyWEtZIMf1qiIge-Q",
+      "name": "Jeannie",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    },
+    {
+      "id": "UCg-l6xiDW1hY4HqF04zkRyw",
+      "name": "이수경국어",
+      "enabled": true,
+      "addedAt": "2026-11-12"
+    }
+  ],
+  "otherChannelsNote": "사용자 결정 2026-11-12 v3: EBS에서 단원 강의를 찾지 못하면 다른 선생님·유명 강사(학원·인강 회사 공식 채널 포함)의 무료 공개 강의도 허용. 후보 찾기가 새 채널을 만나면 여기에 enabled:true로 기록함. 빼고 싶은 채널은 enabled를 false로 바꾸면 후보 찾기·학생 화면 모두에서 빠짐",
+  "channelCandidates": [
+    {
+      "handle": "@EBSi_study",
+      "name": "EBSi 고교 기출의 모든 것",
+      "school": "high",
+      "enabled": false,
+      "verifyNote": "YouTube 검색 결과(2026-11-12)에 있음. channelId·EBS 공식 운영 여부를 확인하지 못해 꺼 둠 [확인 필요]"
+    },
+    {
+      "handle": "@EBS_Math",
+      "name": "EBSMath",
+      "school": "high",
+      "enabled": false,
+      "verifyNote": "EBS 수학 사이트(ebsmath.co.kr)는 EBS 공식 서비스 목록에 있음. 채널이 그 사이트의 공식 채널인지, 중·고 교과 강의가 있는지 확인 못 함 [확인 필요]"
+    },
+    {
+      "url": "https://www.youtube.com/user/EBSLanguage",
+      "name": "EBS ENGLISH",
+      "school": "high",
+      "enabled": false,
+      "verifyNote": "EBS English(ebse.co.kr) 채널로 보이나 생활·실용 영어 위주라 교과 단원과 맞는지 확인 필요 [확인 필요]"
+    }
+  ],
+  "publishers": [
+    {
+      "match": [
+        "한국교육방송공사",
+        "EBS"
+      ],
+      "name": "EBS (한국교육방송공사)",
+      "note": "EBS 교재. 공영방송 교재라 우선 허용. 판매 링크가 아닌 카카오 책 정보 링크만 씀",
+      "verify": true
+    }
+  ],
+  "siteLinks": {
+    "high": {
+      "label": "EBSi 교과서 단원별 강좌 찾기",
+      "url": "https://www.ebsi.co.kr/ebs/lms/lmst/retrieveCourseListByBookMain.ebs",
+      "verify": false,
+      "verifyNote": "EBSi '교과서단원별 강좌찾기' 페이지 (2026-11-12 확인). 과목·단원을 미리 골라 주는 주소 형식은 없음 — 학생이 그 페이지에서 고름"
+    },
+    "middle": {
+      "label": "EBS 중학 바로 가기",
+      "url": "https://mid.ebs.co.kr/",
+      "verify": true,
+      "verifyNote": "과목별 강좌 주소는 확인하지 못해 첫 화면으로 연결 [확인 필요]"
+    }
+  },
+  "filters": {
+    "titleBlockWords": [
+      "#shorts",
+      "쇼츠",
+      "shorts",
+      "예고",
+      "이벤트",
+      "광고",
+      "구독",
+      "라이브 공지",
+      "홍보",
+      "공부법",
+      "꿀팁",
+      "학습법",
+      "설명회",
+      "탄탄대로",
+      "업클래스",
+      "상상의 힘"
+    ],
+    "titleBlockNote": "사용자 요청 2026-11-12: 특강·설명회·학습법(동기부여) 영상은 단원 개념 강의가 아니라 뺌. '특강'은 '개념 특강'·'라이브 특강'처럼 교과 강의도 많아 통째로 막지 않고, 확인된 이름(업클래스, 상상의 힘, 탄탄대로)과 학습법·설명회만 막음. 후보 찾기에 적용, 이미 승인된 것은 제외로 내림",
+    "gradeBlockWords": {
+      "middle": [
+        "초등",
+        "고등",
+        "수능",
+        "고1",
+        "고2",
+        "고3",
+        "고교",
+        "올림포스",
+        "만점왕"
+      ],
+      "high": [
+        "초등",
+        "중학",
+        "만점왕"
+      ]
+    },
+    "minVideoMinutes": 20,
+    "minVideoYearByCurriculum": {
+      "2015": 2018,
+      "2022": 2018
+    },
+    "preferVideoYearByCurriculum": {
+      "2022": 2024
+    },
+    "videoYearNote": "사용자 결정 2026-11-12(2차): 연도 기준을 교육과정 기준으로. 2015 개정 과목은 2018년 이후 영상, 2022 개정 과목은 2024년 이후 영상을 우선(추천순 +2)하고 부족하면 같은 내용의 2015 개정 강좌(2018년 이후)도 허용. 1차 결정(2020년 이전 제외)을 대체",
+    "prepCourseWords": [
+      "예비과정",
+      "예비 과정",
+      "예비고1",
+      "예비 고1",
+      "예비고등",
+      "예비 고등",
+      "고등예비",
+      "고등 예비",
+      "예비중1",
+      "예비 중1",
+      "중학예비",
+      "중학 예비"
+    ],
+    "videoRuleNote": "사용자 결정 2026-11-12: 제목에 '예비과정'(예비 고1·고등예비 등)이 있는 영상·재생목록은 뺌(계속 유지). 연도 기준은 minVideoYearByCurriculum. 후보 찾기·승인·학생 화면 모두 적용. 책에는 적용하지 않음",
+    "examWords": [
+      "해설강의",
+      "해설 강의",
+      "모의평가 해설",
+      "학력평가 해설",
+      "수능 해설",
+      "기출 해설",
+      "기출의 미래",
+      "수능 기출",
+      "실전 모의고사",
+      "봉투모의고사"
+    ],
+    "examNote": "제목에 이 말이 있는 영상·강좌는 '수능 대비' 묶음으로 따로 표시하고, 학습 목적이 '수능 대비'·'둘 다'인 고등학생에게만 보여 줌 (사용자 결정 2026-11-12 v3; 같은 날 '기출의 미래'·'수능 기출'·'실전 모의고사'·'봉투모의고사' 추가 — operator 확인)",
+    "otherBlockWords": [
+      "맛보기",
+      "OT",
+      "오리엔테이션",
+      "설명회",
+      "홍보",
+      "결제",
+      "할인",
+      "수강신청",
+      "이벤트",
+      "광고",
+      "예고",
+      "shorts",
+      "쇼츠",
+      "공부법",
+      "꿀팁",
+      "브이로그",
+      "vlog"
+    ],
+    "otherNote": "다른 선생님·유명 강사 강의(EBS 외)는 무료 전체 공개 강의만. 이 말이 제목에 있으면 뺌 (유료 강좌 맛보기·홍보·팁 영상 제외)",
+    "mixedCourseWords": [
+      "확률과통계",
+      "미적분",
+      "기하와벡터",
+      "기하",
+      "수학1",
+      "수학2"
+    ],
+    "mixedCourseNote": "재생목록 제목에 이 과목 이름이 2개 이상(서로 다른 것) 있으면 여러 과목이 섞인 것으로 보고 뺌 (리뷰 권장, 2026-11-12). 비교는 띄어쓰기 없이, Ⅰ·Ⅱ는 1·2로",
+    "unitWords": {
+      "문학": [
+        "문학",
+        "현대시",
+        "고전시가",
+        "소설",
+        "고전산문",
+        "수필"
+      ],
+      "쓰기": [
+        "쓰기",
+        "작문",
+        "서술형",
+        "글쓰기"
+      ],
+      "읽기": [
+        "읽기",
+        "독해",
+        "독서",
+        "비문학"
+      ],
+      "문법": [
+        "문법",
+        "어법"
+      ],
+      "듣기·말하기": [
+        "듣기",
+        "말하기",
+        "화법"
+      ],
+      "매체": [
+        "매체"
+      ],
+      "어휘": [
+        "어휘",
+        "단어",
+        "voca"
+      ],
+      "독해": [
+        "독해",
+        "reading",
+        "구문"
+      ],
+      "듣기": [
+        "듣기",
+        "listening"
+      ]
+    },
+    "unitWordsNote": "사용자 요청 2026-11-12: 책도 단원에 맞게. 제목에 이 단원 말이 있으면 맞는 책, 같은 과목의 다른 단원 말만 있으면 뺌(예: 문학·쓰기에 '문법' 책), 단원 말이 없는 과목 전체 책(예: 올림포스 대수)은 그대로. 여기 없는 단원은 단원 이름 자체로 비교",
+    "minVideoMinutesByUnit": {
+      "english": {
+        "어휘": 10,
+        "듣기": 10
+      }
+    },
+    "minVideoMinutesByUnitNote": "operator 요청 2026-11-12: 영어 어휘·듣기처럼 원래 짧은 유형은 10분 이상 허용(검토 후 보고). 다른 단원은 20분 그대로"
+  },
+  "display": {
+    "maxVideosPerArea": 3,
+    "maxBooksPerArea": 2,
+    "note": "사용자 결정 2026-11-12: 영역당 강의 최대 3개 (같은 날 '5개' 결정을 대체. README·PRD의 '강의 1~2개'와 다름). 책은 1~2권 유지"
+  },
+  "images": {
+    "allowedHosts": [
+      "i.ytimg.com",
+      "search1.kakaocdn.net"
+    ],
+    "maxBytes": 524288,
+    "cacheMax": 300
+  }
+}

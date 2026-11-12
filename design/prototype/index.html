@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>진단하기 · 〈서비스 이름〉 (프로토타입)</title>
+<link rel="icon" href="../icons/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../mockups/motion.css">
+<style>
+  /*
+    v2 (사용자 피드백 2026-11-10: "테두리 이상", "AI 티"): 담백한 교육 서비스 화면
+    - 색: 브랜드 코발트 1색 + 중립색 + '약함' 강조 1색(모든 화면 같은 색)
+    - 구분: 카드 테두리 대신 회색 띠·가는 구분선·글자 굵기
+    - 아이콘은 꼭 필요한 곳(뒤로)만, 둥근 모서리는 6~8px
+  */
+  :root {
+    --brand: #2347C6; --brand-tint: #EEF3FF;
+    --ink: #1A1F2C; --ink-soft: #5B6372;
+    --bg: #FFFFFF; --band: #F4F5F7; --line: #E3E6EC; --control: #8A93A3;
+    --weak: #B93C0B; --weak-tint: #FFF1E8;
+    --error: #C21A33;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  /* 위·아래 고정 띠가 키보드 초점을 가리지 않게 (WCAG 2.4.11, 리뷰 권장 3) */
+  html { scroll-padding-top: 64px; scroll-padding-bottom: 88px; }
+  @media (min-width: 1024px) { html { scroll-padding-top: 80px; scroll-padding-bottom: 0; } }
+  body {
+    background: var(--band); color: var(--ink);
+    font-family: 'Gothic A1', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+    font-size: 16px; line-height: 1.6; word-break: keep-all; overflow-wrap: break-word;
+  }
+  h2, h3, p { margin: 0; }
+  .icon { width: 20px; height: 20px; flex: none; }
+
+  /* 한 화면: 휴대폰은 화면 가득, PC는 가운데 한 단 */
+  .shell { max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--band); display: flex; flex-direction: column; }
+
+  /* 위쪽: 흰 바탕, 아래 가는 진행선 */
+  .appbar { background: var(--bg); padding: 0 16px; position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--line); }
+  .appbar-row { display: flex; justify-content: space-between; align-items: center; min-height: 52px; }
+  .back { color: var(--ink); font-weight: 700; padding: 10px 8px 10px 0; min-height: 44px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+  .back:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .step-text { font-size: 14px; color: var(--ink-soft); }
+  .step-text b { color: var(--brand); }
+  .progress { height: 3px; background: var(--line); margin: 0 -16px; }
+  .progress span { display: block; height: 100%; background: var(--brand); transform-origin: left; }
+
+  main { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .head { background: var(--bg); padding: 24px 16px 8px; }
+  h2 { font-size: 22px; line-height: 1.35; font-weight: 900; letter-spacing: -0.02em; }
+  /* 화면 제목은 화면이 바뀔 때 프로그램으로만 초점을 받음(누르는 요소 아님) → 테두리 없음 */
+  h2:focus { outline: none; }
+  .lead { color: var(--ink-soft); font-size: 15px; margin-top: 6px; }
+  h3 { font-size: 17px; font-weight: 900; }
+  .soft { color: var(--ink-soft); font-size: 14px; }
+
+  /* 구역: 흰 바탕 + 회색 띠로 나눔 (테두리 없음) */
+  .sec { background: var(--bg); padding: 20px 16px; }
+  .head + .sec { padding-top: 12px; }
+  fieldset { border: 0; margin: 0; min-width: 0; }
+  fieldset.sec > legend { float: left; width: 100%; padding: 0; margin-bottom: 12px; font-weight: 700; font-size: 16px; }
+  fieldset.sec > legend + * { clear: both; }
+  .sec-title { font-weight: 700; font-size: 16px; margin-bottom: 12px; }
+
+  .notice { background: var(--band); border-radius: 6px; padding: 12px 14px; font-size: 14px; color: var(--ink); }
+  .sec > .notice, .head > .notice { margin-top: 12px; }
+
+  /* 고르기 칩: 1px 테두리, 고르면 연한 코발트 + ✓ */
+  .pick { position: relative; display: block; }
+  .pick input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .pick > span {
+    display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 48px; padding: 0 8px;
+    border: 1px solid var(--control); border-radius: 6px; background: var(--bg); font-weight: 700; cursor: pointer; text-align: center; white-space: nowrap;
+    transition: background-color 120ms, border-color 120ms, color 120ms;
+  }
+  .pick input:checked + span { background: var(--brand-tint); border-color: var(--brand); color: var(--brand); }
+  .pick input:checked + span::before { content: '✓'; }
+  .pick input:focus-visible + span { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .grid5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px; }
+
+  /* 영역 체크: 한 줄 세 칸 묶음. 약함 > 보통 > 자신 있음(연하게) */
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--control); border-radius: 6px; overflow: hidden; }
+  .seg .pick + .pick > span { border-left: 1px solid var(--line); }
+  .seg .pick > span { border: 0; border-radius: 0; min-height: 44px; font-size: 15px; font-weight: 400; color: var(--ink-soft); }
+  .seg .pick input:focus-visible + span { outline-offset: -3px; }
+  .seg .confident input:checked + span { background: var(--band); color: var(--ink); font-weight: 700; }
+  .seg .normal input:checked + span { background: var(--brand-tint); color: var(--brand); font-weight: 700; }
+  .seg .weak input:checked + span { background: var(--weak-tint); color: var(--weak); font-weight: 900; }
+  /* 과목(코스) 고르기: 묶음 이름은 작은 글자, 진로·융합은 접기 (테두리 없음) */
+  .group-label { font-size: 14px; color: var(--ink-soft); margin: 16px 0 8px; }
+  fieldset.sec > legend + .group-label { margin-top: 0; }
+  .more { margin-top: 12px; }
+  .more summary { min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 700; color: var(--brand); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .more summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .more[open] summary { margin-bottom: 8px; }
+  .pick > span { white-space: normal; line-height: 1.3; }
+  /* 3단계: 과목(코스)마다 제목으로 묶음 */
+  .course-head { font-size: 19px; margin: 24px 0 4px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .panel > .soft + .course-head { margin-top: 0; padding-top: 0; border-top: 0; }
+  .course-head + .area { border-top: 0; }
+  /* 과목 제목(19px·900) 아래 단원 이름은 한 단계 가볍게 (15px·700) */
+  .course-head ~ .area .area-name { font-size: 15px; }
+  .course-of { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+  .area { padding: 14px 0; border-top: 1px solid var(--line); }
+  .area:first-of-type { border-top: 0; padding-top: 0; }
+  .area-name { font-weight: 700; margin-bottom: 8px; }
+  .area.missing .area-name { color: var(--error); }
+
+  /* '약함'·'보통' 표시: 테두리 없는 글자 표시. 약함은 강조색 한 가지 */
+  .lv { font-size: 14px; font-weight: 700; color: var(--ink-soft); }
+  .lv.weak { color: var(--weak); }
+
+  /* 과목 탭: 밑줄 탭 */
+  .tabs { display: flex; background: var(--bg); border-bottom: 1px solid var(--line); padding: 0 8px; }
+  .tabs button { flex: 1; min-height: 48px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--ink-soft); font: inherit; font-weight: 700; cursor: pointer; }
+  .tabs button[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--ink); }
+  .tabs button:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+
+  /* 입력 */
+  .field { display: grid; grid-template-columns: 1fr 112px; align-items: center; gap: 8px; margin-top: 12px; }
+  .field label { font-size: 15px; }
+  .field input { min-height: 48px; border: 1px solid var(--control); border-radius: 6px; padding: 0 12px; font: inherit; font-weight: 700; text-align: right; background: var(--bg); color: var(--ink); width: 100%; }
+  .field input:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+  [aria-invalid='true'] { border-color: var(--error) !important; box-shadow: inset 0 0 0 1px var(--error); }
+  .error { color: var(--error); font-size: 14px; font-weight: 700; margin-top: 8px; }
+  .error::before { content: '⚠ '; }
+  .head > .error { margin-top: 12px; }
+
+  /* 결과 */
+  .result-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .level { font-size: 15px; color: var(--ink-soft); white-space: nowrap; }
+  .level b { font-size: 28px; font-weight: 900; color: var(--brand); margin-left: 6px; }
+  .why { margin-top: 4px; }
+  .rows { list-style: none; padding: 0; margin: 12px 0 0; }
+  .rows li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+  .sub-title { font-size: 14px; font-weight: 700; color: var(--ink-soft); margin-top: 20px; }
+
+  /* 추천 */
+  [id^='panel-recommend-']:not([hidden]) { display: flex; flex-direction: column; gap: 8px; }
+  .area-head { display: flex; align-items: baseline; gap: 8px; }
+  .direction { font-size: 14px; color: var(--ink-soft); margin-top: 2px; }
+  /* 영상 강의 / 책: 영역 안의 큰 소제목 (실제 h4, 테두리 없이 글자 크기·여백으로) */
+  .group-head { font-size: 18px; font-weight: 900; margin-top: 20px; padding-bottom: 6px; }
+  .group-head + .item { border-top: 1px solid var(--ink); }
+  .scope-note { margin-bottom: 4px; }
+  .item-reason { font-size: 14px; color: var(--ink); margin-top: 4px; line-height: 1.5; }
+  .site-link { margin-top: 8px; font-size: 14px; }
+  .site-link a { color: var(--brand); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; display: inline-flex; align-items: center; min-height: 44px; }
+  .site-link a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .item { display: grid; grid-template-columns: 72px 1fr; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
+  .area-head + .direction + .item, .direction + .item { margin-top: 10px; }
+  .item.video { grid-template-columns: 128px 1fr; }
+  .thumb { width: 100%; border-radius: 4px; background: var(--band); display: block; object-fit: cover; }
+  .item.book .thumb { aspect-ratio: 120 / 174; }
+  .item.video .thumb { aspect-ratio: 16 / 9; }
+  .item-kind { font-size: 13px; color: var(--ink-soft); }
+  .item-title { font-weight: 700; line-height: 1.45; margin: 2px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .item-meta { font-size: 14px; color: var(--ink-soft); }
+  .item-actions { display: flex; gap: 16px; margin-top: 4px; }
+  .item-actions a, .item-actions button { min-height: 44px; display: inline-flex; align-items: center; font: inherit; font-size: 14px; font-weight: 700; padding: 0; border: 0; background: none; cursor: pointer; }
+  .item-actions a { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
+  .item-actions button { color: var(--ink-soft); }
+  .item-actions a:focus-visible, .item-actions button:focus-visible, .textlink:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .textlink { border: 0; background: none; color: var(--brand); text-decoration: underline; text-underline-offset: 3px; font: inherit; font-size: 15px; font-weight: 700; padding: 10px 0; min-height: 44px; cursor: pointer; }
+  .empty { background: var(--band); border-radius: 6px; padding: 12px 14px; font-size: 14px; margin-top: 12px; }
+  .loading { margin-top: 12px; }
+  .loading span { display: block; height: 64px; border-radius: 4px; background: var(--band); margin-top: 8px; }
+  .source-note { font-size: 13px; color: var(--ink-soft); }
+  .feedback .row { display: flex; gap: 8px; margin-top: 12px; }
+  .feedback .row button { flex: 1; min-height: 48px; border: 1px solid var(--control); background: var(--bg); border-radius: 6px; font: inherit; font-weight: 700; cursor: pointer; color: var(--ink); }
+  .feedback .row button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .restart { background: var(--bg); padding: 4px 16px 12px; }
+
+  /* 아래 고정 버튼 */
+  .bottom { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--line); padding: 12px 16px; }
+  .primary { width: 100%; min-height: 52px; border: 0; border-radius: 8px; background: var(--brand); color: #fff; font: inherit; font-weight: 700; font-size: 17px; cursor: pointer; }
+  .primary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  /* 움직임: 화면 전환(motion.css m-enter), 진행선 늘어남, 칩 색 바뀜만 */
+  .progress span.grow { animation: grow 300ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+  @keyframes grow { from { transform: scaleX(var(--from, 0)); } to { transform: scaleX(1); } }
+  @media (prefers-reduced-motion: reduce) {
+    .progress span.grow { animation: none !important; }
+    .pick > span { transition: none; }
+  }
+
+  /* ---------- 넓은 화면 (사용자 요청 2026-11-12: "화면을 꽉 채워주세요", 웹사이트 기준) ----------
+     휴대폰(<768px)은 위 그대로. 태블릿(768~1023px)은 넓은 한 단, PC(≥1024px)는 머리띠 + 2단(왼쪽 단계·선택 요약 / 오른쪽 현재 단계) */
+  .frame { flex: 1; display: flex; flex-direction: column; }
+  .content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .side { display: none; }
+  .brand { display: none; }
+  .items { display: block; }
+  /* 카드 안 글: 세로로 쌓고 '보기·숨기기' 줄은 맨 아래 (같은 줄 카드끼리 버튼 위치가 같게, 사용자 요청 2026-11-12) */
+  .item-body { display: flex; flex-direction: column; min-width: 0; }
+  .item-body .item-actions { margin-top: auto; padding-top: 4px; }
+  /* 휴대폰: 묶음 제목 아래 첫 항목 위에 진한 선 (항목을 .items로 감싼 뒤에도 그대로) */
+  .group-head + .items > .item:first-child { border-top: 1px solid var(--ink); }
+
+  @media (min-width: 768px) {
+    .shell { max-width: 880px; }
+    .head { padding: 32px 32px 8px; }
+    .sec { padding: 24px 32px; }
+    .appbar { padding: 0 32px; }
+    .progress { margin: 0 -32px; }
+    .bottom { padding: 16px 32px; }
+    .restart { padding: 4px 32px 16px; }
+    .grid3.grades { grid-template-columns: repeat(6, 1fr); }
+    .grid3.subjects { grid-template-columns: repeat(3, minmax(0, 200px)); }
+    .grid2.courses { grid-template-columns: repeat(4, 1fr); }
+    .grid5 { max-width: 420px; }
+    .field { grid-template-columns: 1fr 160px; }
+    h2 { font-size: 26px; }
+  }
+
+  @media (min-width: 1024px) {
+    body { background: var(--band); }
+    .shell { max-width: none; }
+    /* 머리띠: 화면 가로 전체, 안쪽 내용은 최대 1200px */
+    .appbar { padding: 0; }
+    .appbar-row, .progress-wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+    .appbar-row { min-height: 64px; gap: 24px; }
+    .progress { margin: 0; }
+    .brand { display: block; font-weight: 900; font-size: 18px; letter-spacing: -0.02em; margin-right: auto; }
+    .back { order: -1; }
+    /* 2단: 왼쪽 단계 목록·선택 요약(따라 내려옴), 오른쪽 현재 단계 */
+    .frame { flex-direction: row; align-items: flex-start; gap: 24px; width: 100%; max-width: 1200px; margin: 0 auto; padding: 24px 32px 48px; }
+    .side { display: block; flex: 0 0 260px; position: sticky; top: 88px; background: var(--bg); padding: 20px; border-radius: 8px; }
+    .content { background: transparent; }
+    main { gap: 12px; }
+    .head, .sec { border-radius: 8px; }
+    .head { padding: 28px 32px 12px; }
+    .head + .sec { padding-top: 16px; }
+    .tabs { border-radius: 8px 8px 0 0; padding: 0 16px; }
+    .tabs button { flex: 0 0 auto; padding: 0 20px; }
+    /* '다음' 버튼: 아래 고정 대신 본문 끝 오른쪽 */
+    .bottom { position: static; background: transparent; border: 0; padding: 16px 0 0; display: flex; justify-content: flex-end; }
+    .bottom .primary { width: auto; min-width: 220px; padding: 0 32px; }
+    .restart { background: transparent; padding: 4px 0 0; }
+    /* 고르기: 한 줄에 더 많이 */
+    .grid2.courses { grid-template-columns: repeat(5, 1fr); }
+    /* 영역 체크: 단원을 2열로 (과목 제목은 한 줄 전체) */
+    .panel.areas-grid:not([hidden]) { display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; }
+    .panel.areas-grid > * { grid-column: 1 / -1; }
+    .panel.areas-grid > .area { grid-column: auto; border-top: 1px solid var(--line); padding-top: 14px; }
+    /* 결과: 과목별 구역을 2열로 */
+    main.wide-result { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+    main.wide-result > .head, main.wide-result > .sec:not(.subject-result) { grid-column: 1 / -1; }
+    /* 추천: 영상은 카드 3열(썸네일 위), 책은 2열 목록 */
+    .items.videos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 20px; border-top: 1px solid var(--ink); }
+    .items.videos .item.video { grid-template-columns: 1fr; gap: 8px; border-top: 0; padding: 16px 0; }
+    /* 같은 줄 카드: 제목은 2줄 자리를 늘 차지, 이유는 2줄까지 */
+    .items .item-title { min-height: 2.9em; }
+    .items .item-reason { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 3em; }
+    .items.videos .item.video, .items.books .item { height: 100%; }
+    .items.books { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; border-top: 1px solid var(--ink); }
+    .items.books .item { border-top: 0; border-bottom: 1px solid var(--line); }
+    .group-head + .items .item { border-top: 0; }
+    .feedback .row { max-width: 420px; }
+  }
+
+  /* 왼쪽: 단계 목록 + 지금까지 고른 것 (PC 전용, 휴대폰은 위 진행선이 대신) */
+  .side h2 { font-size: 15px; font-weight: 700; color: var(--ink-soft); margin-bottom: 12px; }
+  .steps { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+  .steps li { display: flex; align-items: center; gap: 10px; min-height: 40px; font-size: 15px; color: var(--ink-soft); }
+  .steps li::before { counter-increment: s; content: counter(s); flex: none; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; background: var(--band); color: var(--ink-soft); }
+  .steps li.done::before { content: '✓'; background: var(--brand-tint); color: var(--brand); }
+  .steps li[aria-current='step'] { color: var(--ink); font-weight: 700; }
+  .steps li[aria-current='step']::before { background: var(--brand); color: #fff; }
+  .summary { margin: 16px 0 0; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; }
+  .summary div { display: grid; grid-template-columns: 56px 1fr; gap: 8px; padding: 4px 0; }
+  .summary dt { color: var(--ink-soft); }
+  .summary dd { margin: 0; font-weight: 700; }
+  .side .note { margin-top: 16px; font-size: 13px; color: var(--ink-soft); }
+
+  /* ---------- v3 표현 강화 (사용자 요청 2026-11-12: "아이콘도 넣어주고, 너무 단순합니다") ----------
+     굵게 쓰는 곳은 한 군데: 과목 타일(과목마다 다른 옅은 바탕 + 과목 기호). 나머지는 작은 선 아이콘. 그라데이션·이모지 없음 */
+  :root { --kor: #B4541A; --kor-tint: #FFF4EC; --eng: #1F7A4D; --eng-tint: #EEF6F1; }
+  .subj-icon { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; }
+  .subj-icon .icon { width: 22px; height: 22px; }
+  .subj-icon.sm { width: 26px; height: 26px; border-radius: 7px; }
+  .subj-icon.sm .icon { width: 16px; height: 16px; }
+  .subj-icon.korean { background: var(--kor-tint); color: var(--kor); }
+  .subj-icon.english { background: var(--eng-tint); color: var(--eng); }
+  .subj-icon.math { background: var(--brand-tint); color: var(--brand); }
+  .pick > span .subj-icon { margin-right: 4px; }
+  .tabs button .subj-icon { margin-right: 6px; vertical-align: -7px; }
+  .subj-legend { display: flex; align-items: center; gap: 10px; }
+  fieldset.sec > legend.subj-legend { font-size: 18px; font-weight: 900; }
+  /* 화면 제목 옆 단계 아이콘 (작은 원) */
+  .head-row { display: flex; align-items: center; gap: 12px; }
+  .step-icon { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--brand-tint); color: var(--brand); display: inline-flex; align-items: center; justify-content: center; }
+  .step-icon .icon { width: 20px; height: 20px; }
+  .kind-icon { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; }
+
+  /* 2단계 성적: 왼쪽 점수/성취도 고르기, 오른쪽 끝 입력란·A~E (휴대폰은 위아래로) */
+  .score-row .field, .score-row .grid5 { margin-top: 12px; }
+  @media (min-width: 768px) {
+    .score-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+    .score-row .mode { flex: 0 0 240px; }
+    .score-input { flex: 1 1 320px; display: flex; flex-direction: column; align-items: flex-end; }
+    .score-row .field, .score-row .grid5 { margin-top: 0; }
+    .score-row .grid5 { width: 100%; max-width: 380px; }
+    .score-row .field { width: 100%; max-width: 380px; grid-template-columns: 1fr 160px; }
+    .score-input .error { align-self: flex-end; }
+  }
+
+  /* 움직임: 사용자가 한 일에 답하는 것만 + 추천 카드가 처음 한 번 */
+  .pick input:checked + span::before { display: inline-block; animation: tick 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  @keyframes tick { from { opacity: 0; transform: scale(0.4) rotate(-20deg); } to { opacity: 1; transform: none; } }
+  .seg .weak input:checked + span { animation: weak-pulse 360ms ease-out both; }
+  @keyframes weak-pulse { from { box-shadow: inset 0 0 0 2px var(--weak); } to { box-shadow: inset 0 0 0 0 transparent; } }
+  .m-swap { animation: swap-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  @keyframes swap-in { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+  .fresh .item { animation: rise 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .fresh .item:nth-child(2) { animation-delay: 60ms; }
+  .fresh .item:nth-child(3) { animation-delay: 120ms; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .head.m-enter .step-icon { animation: icon-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  @keyframes icon-in { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .pick input:checked + span::before, .seg .weak input:checked + span, .m-swap, .fresh .item, .head.m-enter .step-icon { animation: none !important; }
+  }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+  @media print {
+    .appbar, .bottom, .tabs, .item-actions, .feedback, .restart, .loading, .side { display: none !important; }
+    .frame { display: block !important; padding: 0 !important; }
+    .panel[hidden] { display: block !important; }
+    .item.is-hidden { display: none !important; }
+    body, .shell { background: #fff; }
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <header class="appbar" id="appbar"></header>
+    <div class="frame">
+      <aside class="side" id="side"></aside>
+      <div class="content">
+        <main id="app" aria-live="off"></main>
+        <div class="bottom" id="bottom"></div>
+      </div>
+    </div>
+  </div>
+  <p class="sr-only" id="announce" aria-live="polite"></p>
+  <noscript><p style="padding:16px">이 프로토타입은 자바스크립트가 필요해요.</p></noscript>
+  <script src="app.js"></script>
+</body>
+</html>
