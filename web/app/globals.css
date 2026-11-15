@@ -1,0 +1,18 @@
+/* Tailwind CSS 4: 테마·유틸리티만 (리셋 preflight는 쓰지 않음 — 화면 스타일은 screen.css 가 프로토타입과 똑같이 맡음) */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* 프로토타입 색·글꼴 기준을 Tailwind 테마로도 (새 화면 조각을 만들 때 bg-brand, text-ink-soft 등으로 씀) */
+@theme {
+  --color-brand: #2347C6;
+  --color-brand-tint: #EEF3FF;
+  --color-ink: #1A1F2C;
+  --color-ink-soft: #5B6372;
+  --color-band: #F4F5F7;
+  --color-line: #E3E6EC;
+  --color-control: #8A93A3;
+  --color-weak: #B93C0B;
+  --color-weak-tint: #FFF1E8;
+  --font-sans: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+}

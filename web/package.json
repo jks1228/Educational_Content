@@ -1,0 +1,28 @@
+{
+  "name": "gongbugil-web",
+  "private": true,
+  "type": "module",
+  "description": "공부길 1-B: Next.js 정적 웹앱 (docs/1b-design.md)",
+  "license": "CC-BY-NC-SA-4.0",
+  "scripts": {
+    "recs": "node scripts/build-recs.mjs",
+    "dev": "npm run recs && next dev -p 3001 -H 127.0.0.1",
+    "build": "npm run recs && next build",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"tests/**/*.test.ts\""
+  },
+  "dependencies": {
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "postcss": "8.5.32",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3"
+  }
+}
