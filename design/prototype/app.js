@@ -64,7 +64,7 @@
   /* ---------- 상태 (메모리만) ---------- */
   var state = freshState();
   function freshState() {
-    return { grade: null, subjects: [], courses: {}, purpose: null, scores: {}, checks: {}, tab: { areas: null, recommend: null }, recTab: {}, hidden: {}, feedback: null, errors: {}, notice: null };
+    return { grade: null, subjects: [], courses: {}, purpose: null, scores: {}, checks: {}, tab: { areas: null, recommend: null }, recKind: 'video', hidden: {}, feedback: null, errors: {}, notice: null };
   }
   var lastStepIndex = -1;
 
@@ -241,16 +241,15 @@
       .catch(function () { remote[key] = { status: 'fail', videos: [], books: [] }; done(); });
   }
 
-  // 지금 보이는 과목 탭의 영역만 불러옴
+  // 지금 보이는 과목 탭의 영역만 불러옴. 탭 안의 영역을 모두 불러온 뒤 한 번에 카드를 묶고 채움
   function loadPanel(subjectId) {
-    var panel = document.getElementById('panel-recommend-' + subjectId);
-    if (!panel) return;
-    var slots = Array.prototype.slice.call(panel.querySelectorAll('[data-slot]')), left = slots.length;
-    // 탭 안의 영역을 모두 불러온 뒤 한 번에 중복을 빼고 채움 (사용자 요청 2026-11-12: "중복되는 영상도 안 겹치게")
-    slots.forEach(function (slot) {
-      fetchRecs(slot.getAttribute('data-key'), function () {
+    var body = document.getElementById('rec-body-' + subjectId);
+    if (!body) return;
+    var entries = panelEntries(subjectId), left = entries.length;
+    entries.forEach(function (e) {
+      fetchRecs(e.q.key, function () {
         left -= 1;
-        if (left === 0) { buildView(slots); slots.forEach(fillSlot); }
+        if (left === 0) fillPanel(subjectId);
       });
     });
   }
@@ -259,21 +258,33 @@
      화면 순서(약함 → 보통)대로, 1차: 영역마다 그 단원 전용 강의, 2차: 남은 칸을 과목 전체 강의(대체) 중 아직 안 나온 것으로.
      채울 것이 없으면 반복하지 않고 "위 ○○ 단원에 있어요" 안내. */
   var MAX_VIDEOS = 3, MAX_BOOKS = 2;
-  var view = {};
   function dedupe(slots, field, max, unitFirst) {
     var seen = {}, out = {};
     slots.forEach(function (slot) { out[slot.getAttribute('data-key')] = []; });
-    var take = function (onlyUnit) {
+    // 같은 책 시리즈(다른 판·저자)도 과목 탭 안에서 한 번만 (사용자 캡처 2026-11-15)
+    var idOf = function (it) { return it.series ? 'series:' + it.series : it.url; };
+    // 채널: 한 영역에 같은 채널 강의가 몰리지 않게 1차로 채널마다 1개 (사용자 캡처 2026-11-15: 문법 3개 모두 한 채널)
+    var chOf = function (it) { return it.kind === 'course' ? 'ebsi-course' : (it.channelId || it.provider || it.url); };
+    // cap: 한 영역에 같은 채널 최대 몇 개까지
+    var take = function (onlyUnit, cap) {
       slots.forEach(function (slot) {
         var key = slot.getAttribute('data-key'), r = remote[key] || {}, list = out[key];
         (r[field] || []).forEach(function (it) {
-          if (list.length >= max || seen[it.url] || (onlyUnit && !it.forUnit)) return;
-          seen[it.url] = slot.getAttribute('data-title'); list.push(it);
+          if (list.length >= max || seen[it.url] || seen[idOf(it)] || (onlyUnit && !it.forUnit)) return;
+          if (list.filter(function (x) { return chOf(x) === chOf(it); }).length >= cap) return;
+          seen[it.url] = seen[idOf(it)] = slot.getAttribute('data-title'); list.push(it);
         });
       });
     };
-    if (unitFirst) take(true);
-    take(false);
+    // 순서: 이 단원 강의·채널마다 1개 → 이 단원 강의·같은 채널 2개까지 → 과목 강의·채널마다 1개 → 나머지
+    // (단원과 관계없는 과목 강의보다 이 단원 강의가 먼저, 다만 한 채널이 3칸을 다 차지하지는 않게)
+    if (unitFirst) { take(true, 1); take(true, 2); take(false, 1); take(false, 2); }
+    take(false, Infinity);
+    // 고른 것은 이 단원 강의 먼저, 그 안에서는 서버 추천순으로 다시 정렬
+    slots.forEach(function (slot) {
+      var key = slot.getAttribute('data-key'), all = (remote[key] || {})[field] || [];
+      out[key].sort(function (a, b) { return (unitFirst ? (b.forUnit ? 1 : 0) - (a.forUnit ? 1 : 0) : 0) || (all.indexOf(a) - all.indexOf(b)); });
+    });
     // 다 겹쳐서 하나도 못 넣은 영역: 처음 나온 영역 이름
     var notes = {};
     slots.forEach(function (slot) {
@@ -282,12 +293,33 @@
     });
     return { lists: out, notes: notes };
   }
-  function buildView(slots) {
-    var v = dedupe(slots, 'videos', MAX_VIDEOS, true), e = dedupe(slots, 'examVideos', MAX_VIDEOS, true), b = dedupe(slots, 'books', MAX_BOOKS, false);
-    slots.forEach(function (slot) {
-      var key = slot.getAttribute('data-key');
-      view[key] = { videos: v.lists[key], videosAt: v.notes[key], exam: e.lists[key], examAt: e.notes[key], books: b.lists[key], booksAt: b.notes[key] };
+  /* 같은 추천을 공유하는 단원은 카드 하나로 (사용자 요청 2026-11-15: "같은 책(강의)일 경우 따로 있지 않고 → 어휘, 문법, 독해, 듣기 / 동일한 추천")
+     종류(영상·수능 대비·책)마다 따로 묶음: ① 서버가 준 목록이 똑같은 단원끼리 한 카드 ② 카드끼리 겹치는 항목은 한 번만(dedupe)
+     ③ 그래서 비게 된 카드는 그 항목이 보이는 카드에 합침 → '위 ○○에 있어요' 반복 카드 없음. 단원 전용 강의가 있는 단원은 목록이 달라 따로 카드 */
+  function groupCards(entries, field, max, unitFirst) {
+    var groups = [], bySig = {};
+    entries.forEach(function (e) {
+      var list = (remote[e.q.key] || {})[field] || [];
+      var sig = list.map(function (it) { return it.url; }).join('\n');
+      if (sig && bySig[sig]) { bySig[sig].entries.push(e); return; }
+      var g = { id: 'g' + groups.length, key: e.q.key, entries: [e] };
+      if (sig) bySig[sig] = g;
+      groups.push(g);
     });
+    var slots = groups.map(function (g) { return { getAttribute: function (n) { return n === 'data-key' ? g.key : g.id; } }; });
+    var d = dedupe(slots, field, max, unitFirst);
+    groups.forEach(function (g) { g.items = d.lists[g.key]; g.at = d.notes[g.key] || ''; });
+    // 겹쳐서 빈 카드 → 그 항목을 보여 주는 카드로 합침
+    var byId = {};
+    groups.forEach(function (g) { byId[g.id] = g; });
+    groups.forEach(function (g) {
+      if (g.items.length || !g.at || !byId[g.at] || byId[g.at] === g) return;
+      var host = byId[g.at];
+      while (host.mergedInto) host = host.mergedInto;
+      host.entries = host.entries.concat(g.entries);
+      g.mergedInto = host;
+    });
+    return groups.filter(function (g) { return !g.mergedInto; });
   }
   function allConfident(s) { var c = checksOf(s); return areasOf(s).every(function (a) { return c[a.id] === 'confident'; }); }
 
@@ -299,7 +331,7 @@
     var backHref = i === 1 ? LANDING : '#/' + STEPS[i - 2];
     barEl.innerHTML =
       '<div class="appbar-row"><a class="back" href="' + backHref + '" data-action="back">' + icon('i-back') + '뒤로</a>' +
-      '<span class="brand" aria-hidden="true">〈서비스 이름〉</span>' +
+      '<span class="brand" aria-hidden="true">공부길</span>' +
       '<span class="step-text" role="img" aria-label="5단계 중 ' + i + '단계"><b>' + i + '</b> / 5</span></div>' +
       '<div class="progress-wrap"><div class="progress" aria-hidden="true"><span' + (forward && i > 1 ? ' class="grow"' : '') + ' style="width:' + (i * 20) + '%;--from:' + ((i - 1) / i) + '"></span></div></div>';
   }
@@ -479,6 +511,10 @@
   // 표지·썸네일은 미리보기 서버를 거쳐 받음 (학생 브라우저가 카카오·YouTube 이미지 서버에 바로 접속하지 않게)
   function imgSrc(u) { return safeUrl(u) ? '/api/img?u=' + encodeURIComponent(u) : ''; }
 
+  function thumbPlaceholder(isBook) {
+    return '<span class="thumb thumb-empty ' + (isBook ? 'book' : 'video') + '" aria-hidden="true">' + icon(isBook ? 'i-book' : 'i-lecture', 'ph-icon') + '</span>';
+  }
+
   function itemHtml(it) {
     var key = it.id;
     if (state.hidden[key]) return '';
@@ -491,11 +527,15 @@
     var kindText = isCourse ? site + ' 강좌' + (it.itemCount ? ' · ' + it.itemCount + '강' : '')
       : it.kind === 'playlist' ? '강좌 재생목록' + (it.itemCount ? ' · ' + it.itemCount + '강' : '') + other
       : it.kind === 'video' ? '영상 강의' + (it.durationMin ? ' · ' + it.durationMin + '분' : '') + other : '책';
-    var meta = (isBook ? esc(it.authors) + (it.provider ? ', ' + esc(it.provider) : '')
+    // 진로·융합 과목에 넣은 예전 교육과정 강의: 학생이 알 수 있게 작게 표시 (사용자 요청 2026-11-15)
+    if (it.oldCurriculum) kindText += ' · 예전 교육과정 강의';
+    // 책: 저자·출판사 중 있는 것만 (저자 자리표시 값을 뺀 뒤 앞에 쉼표가 남지 않게)
+    var meta = (isBook ? [it.authors, it.provider].filter(Boolean).map(esc).join(', ')
       : isCourse ? esc(it.provider) + (it.teacher ? ' · ' + esc(it.teacher) + ' 선생님' : '') : esc(it.provider)) +
       (it.year ? ', ' + esc(it.year) + '년' : '') + (it.isFree ? ' · 무료' : '');
     var src = imgSrc(it.thumbnail);
-    var thumb = src ? '<img class="thumb" src="' + esc(src) + '" alt="" loading="lazy">' : '<span class="thumb" aria-hidden="true"></span>';
+    // 표지·썸네일이 없거나(서점 자리표시 그림 포함, 서버가 404) 못 불러오면 책·강의 아이콘 자리표시 (운영 지적 2026-11-15)
+    var thumb = src ? '<img class="thumb" src="' + esc(src) + '" alt="" loading="lazy" data-ph="' + (isBook ? 'book' : 'video') + '">' : thumbPlaceholder(isBook);
     return '<article class="item ' + (isBook ? 'book' : 'video') + '">' + thumb + '<div class="item-body">' +
       '<p class="item-kind">' + icon(isBook ? 'i-book' : 'i-lecture', 'kind-icon') + kindText + '</p>' +
       '<p class="item-title">' + esc(it.title) + '</p>' +
@@ -520,85 +560,114 @@
     return h + (extra || '');
   }
 
-  // 한 영역의 자리. 결과는 불러온 뒤 fillSlot이 채움
-  function slotInner(key) {
-    var r = remote[key];
-    if (!r || r.status === 'loading') {
-      return '<div class="loading" role="status"><span class="sr-only">추천을 불러오는 중이에요</span><span></span><span></span></div>';
-    }
-    if (r.status === 'fail') return '<p class="empty">추천을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>';
-    var w = view[key];
-    if (!w) return '<div class="loading" role="status"><span class="sr-only">추천을 불러오는 중이에요</span><span></span><span></span></div>';
-    var at = function (title, what) { return title ? '같은 과목의 ' + what + ' 위 ‘' + title + '’에 있어요.' : ''; };
-    // 영상 묶음 아래 사이트 바로가기(EBS 중학·EBSi)는 넣지 않음 (사용자 요청 2026-11-12)
-    var site = '';
-    // 이 단원 강의가 아직 없으면 같은 과목 강의로 대신 보여 주고 그렇다고 알림
-    var scopeNote = w.videos.some(function (it) { return !it.forUnit; }) ? '이 단원만 다루는 강의를 준비하는 동안, 같은 과목의 강의를 보여 줘요.' : '';
-    // 영상·책을 탭으로 나눔 (사용자 요청 2026-11-13). 기본은 영상 강의
-    var tabs = [
-      { id: 'video', label: '영상 강의', icon: 'i-lecture', items: w.videos, html: groupHtml('영상 강의', w.videos, at(w.videosAt, '강의는') || '확인을 마친 무료 강의를 준비하고 있어요.', site, scopeNote) }
-    ];
-    // 수능 해설강의: 수능 대비 학생에게만, 개념 강의와 따로 (서버가 그때만 보냄) → 탭 하나 더
-    if (w.exam.length || w.examAt) {
-      tabs.push({ id: 'exam', label: '수능 대비', icon: 'i-lecture', items: w.exam, html: groupHtml('수능 대비', w.exam, at(w.examAt, '수능 대비 강의는'), '', '수능·모의고사 문제를 풀고 해설하는 강의예요. 개념을 익힌 뒤에 보면 좋아요.') });
-    }
-    tabs.push({ id: 'book', label: '책 추천', icon: 'i-book', items: w.books, html: groupHtml('책', w.books, at(w.booksAt, '책은') || '확인을 마친 책을 준비하고 있어요.') });
-    return recTabsHtml(key, tabs);
+  var LOADING = '<div class="loading" role="status"><span class="sr-only">추천을 불러오는 중이에요</span><span></span><span></span></div>';
+
+  // 과목 탭의 단원 목록(화면 순서: 약함 → 보통). 모두 자신 있음이면 과목 전체 한 칸
+  function panelEntries(sid) {
+    var lv = levelOf(sid).level, c = checksOf(sid), list = areasOf(sid), label = subj(sid).label;
+    if (allConfident(sid)) return [{ title: label + ' 전체', check: null, courseLabel: '', q: recFor(sid, null, lv, 'normal') }];
+    return list.filter(function (a) { return c[a.id] === 'weak'; }).concat(list.filter(function (a) { return c[a.id] === 'normal'; })).map(function (a) {
+      return { title: a.label, check: c[a.id], courseLabel: a.whole ? '' : a.courseTag, q: recFor(sid, a, lv, c[a.id]) };
+    });
   }
 
-  // 슬롯마다 탭 id가 겹치지 않게 짧은 번호를 붙임
-  var slotNo = {}, slotCount = 0;
-  function slotId(key) { if (!slotNo[key]) slotNo[key] = 'rec' + (++slotCount); return slotNo[key]; }
+  // 종류 하나의 카드: 단원 하나면 지금처럼, 여럿이면 '어휘 · 문법 · 독해' 제목 + 단원마다 배지 + '이 단원들은 같은 추천이에요'
+  var KIND_FIELD = { video: 'videos', exam: 'examVideos', book: 'books' };
+  function cardHtml(g, kind) {
+    var es = g.entries.slice().sort(function (a, b) { return (a.check === 'weak' ? 0 : 1) - (b.check === 'weak' ? 0 : 1); });
+    var badge = function (e) { return e.check ? '<span class="lv ' + e.check + '">' + CHECK_LABEL[e.check] + '</span>' : ''; };
+    var h = '<section class="sec rec-card">';
+    if (es.length === 1) {
+      var e = es[0];
+      h += '<div class="area-head"><h3>' + esc(e.title) + '</h3>' + badge(e) + '</div>' + (e.courseLabel ? '<p class="course-of">' + esc(e.courseLabel) + '</p>' : '');
+    } else {
+      // 모두 같은 과목이면 과목 이름은 한 번만
+      var oneCourse = es.every(function (x) { return x.courseLabel === es[0].courseLabel; });
+      h += '<h3 class="merged-title">' + es.map(function (x) { return esc(x.title); }).join(' · ') + '</h3>' +
+        '<ul class="unit-chips" aria-label="단원별 체크">' + es.map(function (x) { return '<li>' + esc(x.title) + (!oneCourse && x.courseLabel ? ' <span class="soft">(' + esc(x.courseLabel) + ')</span>' : '') + badge(x) + '</li>'; }).join('') + '</ul>' +
+        (oneCourse && es[0].courseLabel ? '<p class="course-of">' + esc(es[0].courseLabel) + '</p>' : '') +
+        '<p class="soft same-note">이 단원들은 같은 추천이에요.</p>';
+    }
+    // 추천 방향: 단원마다 다르면 약함·보통으로 나눠 적음
+    var dirs = [];
+    es.forEach(function (x) { var t = TYPE_LABEL[x.q.cell[0]] + ', ' + TYPE_LABEL[x.q.cell[1]]; var lab = es.length > 1 && x.check ? CHECK_LABEL[x.check] + ' 단원: ' : ''; if (!dirs.some(function (d) { return d.t === t; })) dirs.push({ t: t, lab: lab }); });
+    h += dirs.map(function (d) { return '<p class="direction">' + (dirs.length > 1 ? d.lab : '') + d.t + '</p>'; }).join('');
+    var items = g.items || [];
+    // 합친 카드의 책 설명: 첫 단원 기준 문구("문법 단원: 교과서 문법 내용을…")를 묶인 단원 전체로
+    if (es.length > 1) {
+      var first = g.entries[0].title, joined = es.map(function (x) { return x.title; }).join('·');
+      items = items.map(function (it) {
+        if (it.kind !== 'book' || it.reason.indexOf(first + ' 단원: ') !== 0) return it;
+        return Object.assign({}, it, { reason: it.reason.slice((first + ' 단원: ').length).split(first).join(joined) });
+      });
+    }
+    if (kind === 'video') {
+      // 단원 강의가 하나도 없을 때만 '준비하는 동안' 안내, 일부만 대체면 몇 개인지 (운영 표본 2026-11-15). 여러 단원 카드는 같은 추천이라 생략
+      var subst = items.filter(function (it) { return !it.forUnit && !state.hidden[it.id]; }).length;
+      var own = items.filter(function (it) { return it.forUnit && !state.hidden[it.id]; }).length;
+      var note = es.length > 1 || !subst ? '' : !own ? '이 단원만 다루는 강의를 준비하는 동안, 같은 과목의 강의를 보여 줘요.' : '이 가운데 ' + subst + '개는 같은 과목의 다른 단원 강의예요.';
+      h += groupHtml('영상 강의', items, '확인을 마친 무료 강의를 준비하고 있어요.', '', note);
+    } else if (kind === 'exam') {
+      h += groupHtml('수능 대비', items, '이 단원의 수능 대비 강의를 준비하고 있어요.', '', '수능·모의고사 문제를 풀고 해설하는 강의예요. 개념을 익힌 뒤에 보면 좋아요.');
+    } else {
+      h += groupHtml('책', items, '확인을 마친 책을 준비하고 있어요.');
+    }
+    return h + '</section>';
+  }
 
-  // [영상 강의] [수능 대비] [책 추천] 탭 + 탭마다 내용 (role=tablist/tab/tabpanel, 방향키는 아래 keydown 처리)
-  function recTabsHtml(key, tabs) {
-    var sid = slotId(key);
-    var cur = tabs.some(function (t) { return t.id === state.recTab[key]; }) ? state.recTab[key] : 'video';
+  // 과목 탭 내용: 종류마다 카드 묶음. 위 탭(recKind)이 고른 종류만 보이고, 인쇄는 전부
+  function panelBodyHtml(sid) {
+    var entries = panelEntries(sid);
+    if (entries.some(function (e) { var r = remote[e.q.key]; return !r || r.status === 'loading'; })) return LOADING;
+    if (entries.every(function (e) { return remote[e.q.key].status === 'fail'; })) return '<div class="sec"><p class="empty">추천을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p></div>';
+    var kinds = ['video'].concat(wantsExamTab() ? ['exam'] : [], ['book']), cur = recKind();
+    return kinds.map(function (k) {
+      var cards = groupCards(entries, KIND_FIELD[k], k === 'book' ? MAX_BOOKS : MAX_VIDEOS, k !== 'book');
+      return '<div class="rec-group" data-kind="' + k + '"' + (k === cur ? '' : ' hidden') + '>' + cards.map(function (g) { return cardHtml(g, k); }).join('') + '</div>';
+    }).join('');
+  }
+
+  // 수능 대비 탭: 고등학생이 '수능 대비'·'둘 다'를 골랐을 때만 (서버도 그때만 수능 대비 강의를 보냄)
+  // 고1은 숨김: 고1 과목(공통수학·공통국어·공통영어)에는 수능 대비 강의를 두지 않아 탭이 늘 비어 있음 (사용자 결정 2026-11-15)
+  function wantsExamTab() { return isHigh() && state.grade !== 'h1' && (state.purpose === 'suneung' || state.purpose === 'both'); }
+  function recKind() { var k = state.recKind || 'video'; return k === 'exam' && !wantsExamTab() ? 'video' : k; }
+
+  // 추천 맨 위 탭 하나 (role=tablist/tab, 내용은 아래 #rec-kind-panel 하나, 방향키는 아래 keydown 처리)
+  function recKindTabsHtml() {
+    var kinds = [{ id: 'video', label: '영상 강의', icon: 'i-lecture' }];
+    if (wantsExamTab()) kinds.push({ id: 'exam', label: '수능 대비', icon: 'i-lecture' });
+    kinds.push({ id: 'book', label: '책 추천', icon: 'i-book' });
+    var cur = recKind();
     var h = '<div class="rec-tabs" role="tablist" aria-label="추천 종류">';
-    tabs.forEach(function (t) {
-      var sel = t.id === cur;
-      var n = t.items.filter(function (it) { return !state.hidden[it.id]; }).length;
-      h += '<button type="button" role="tab" id="' + sid + '-tab-' + t.id + '" aria-controls="' + sid + '-panel-' + t.id + '" aria-selected="' + sel + '" tabindex="' + (sel ? 0 : -1) + '" data-action="rectab" data-key="' + esc(key) + '" data-rec="' + t.id + '">' +
-        icon(t.icon, 'kind-icon') + t.label + '<span class="rec-count">' + n + '<span class="sr-only">개</span></span></button>';
+    kinds.forEach(function (k) {
+      var sel = k.id === cur;
+      h += '<button type="button" role="tab" id="rec-kind-' + k.id + '" aria-controls="rec-kind-panel" aria-selected="' + sel + '" tabindex="' + (sel ? 0 : -1) + '" data-action="reckind" data-rec="' + k.id + '">' + icon(k.icon, 'kind-icon') + k.label + '</button>';
     });
-    h += '</div>';
-    tabs.forEach(function (t) {
-      h += '<div class="rec-panel" role="tabpanel" id="' + sid + '-panel-' + t.id + '" aria-labelledby="' + sid + '-tab-' + t.id + '"' + (t.id === cur ? '' : ' hidden') + '>' + t.html + '</div>';
-    });
-    return h;
+    return h + '</div>';
   }
 
-  function fillSlot(slot) {
-    var focused = slot.contains(document.activeElement);
-    slot.innerHTML = slotInner(slot.getAttribute('data-key'));
+  function fillPanel(sid) {
+    var body = document.getElementById('rec-body-' + sid);
+    if (!body) return;
+    var wasLoading = !!body.querySelector('.loading');
+    body.innerHTML = panelBodyHtml(sid);
     // 불러온 직후 한 번만 카드가 차례로 올라옴 (숨기기 등 다시 그릴 때는 안 움직임)
-    slot.classList.add('fresh');
-    setTimeout(function () { slot.classList.remove('fresh'); }, 900);
-    if (focused) { var h3 = slot.parentNode.querySelector('h3'); if (h3) { h3.setAttribute('tabindex', '-1'); h3.focus(); } }
-  }
-
-  function areaBlock(title, tagHtml, q, courseLabel) {
-    return '<section class="sec"><div class="area-head"><h3>' + esc(title) + '</h3>' + tagHtml + '</div>' +
-      (courseLabel ? '<p class="course-of">' + esc(courseLabel) + '</p>' : '') +
-      '<p class="direction">' + TYPE_LABEL[q.cell[0]] + ', ' + TYPE_LABEL[q.cell[1]] + '</p>' +
-      '<div data-slot data-key="' + esc(q.key) + '" data-title="' + esc(title) + '">' + slotInner(q.key) + '</div></section>';
+    if (wasLoading) { body.classList.add('fresh'); setTimeout(function () { body.classList.remove('fresh'); }, 900); }
   }
 
   function viewRecommend() {
     var subs = chosenSubjects();
     if (!state.tab.recommend || state.subjects.indexOf(state.tab.recommend) === -1) state.tab.recommend = subs[0].id;
-    var cur = state.tab.recommend, h = '<div>' + tabsHtml('recommend', cur, null);
+    var cur = state.tab.recommend;
+    // 맨 위: 추천 종류 탭(모든 과목·단원에 함께 적용) → 그 아래 과목 탭과 내용이 하나의 탭 패널
+    var h = '<div class="sec rec-kind-bar">' + recKindTabsHtml() + '</div>' +
+      '<div id="rec-kind-panel" role="tabpanel" aria-labelledby="rec-kind-' + recKind() + '">' + tabsHtml('recommend', cur, null);
     subs.forEach(function (s) {
-      var lv = levelOf(s.id).level, c = checksOf(s.id), list = areasOf(s.id);
+      var lv = levelOf(s.id).level;
       h += '<div class="panel" id="panel-recommend-' + s.id + '"' + (subs.length > 1 ? ' role="tabpanel" aria-labelledby="tab-recommend-' + s.id + '"' : '') + (s.id !== cur ? ' hidden' : '') + '>';
       h += '<div class="sec" style="padding-top:14px;padding-bottom:14px"><p class="soft">' + s.label + ' 수준 ' + LEVEL_LABEL[lv] + '에 맞춰 찾았어요</p></div>';
-      if (allConfident(s.id)) {
-        h += areaBlock(s.label + ' 전체', '', recFor(s.id, null, lv, 'normal'));
-      } else {
-        list.filter(function (a) { return c[a.id] === 'weak'; }).concat(list.filter(function (a) { return c[a.id] === 'normal'; })).forEach(function (a) {
-          h += areaBlock(a.label, '<span class="lv ' + c[a.id] + '">' + CHECK_LABEL[c[a.id]] + '</span>', recFor(s.id, a, lv, c[a.id]), a.whole ? '' : a.courseTag);
-        });
-      }
+      // 카드는 불러온 뒤 같은 추천끼리 묶어서 채움 (fillPanel)
+      h += '<div class="rec-body" id="rec-body-' + s.id + '">' + (s.id === cur ? panelBodyHtml(s.id) : '') + '</div>';
       h += '</div>';
     });
     h += '</div><section class="sec feedback"><h3 id="fb-title" tabindex="-1">추천이 도움이 됐나요?</h3>';
@@ -637,7 +706,7 @@
       (lead ? '<p class="lead">' + esc(lead) + '</p>' : '') + '</div>' + views[step]();
     bottomEl.innerHTML = bottomFor(step);
     if (step === 'recommend') loadPanel(state.tab.recommend);
-    document.title = STEP_TITLE[step] + ' · 〈서비스 이름〉 (프로토타입)';
+    document.title = STEP_TITLE[step] + ' · 공부길 (프로토타입)';
     if (stepChanged) {
       lastStepIndex = STEPS.indexOf(step);
       window.scrollTo(0, 0);
@@ -793,17 +862,22 @@
       render(step, { focusId: 'tab-' + el.getAttribute('data-kind') + '-' + el.getAttribute('data-subject') });
       return;
     }
-    // 추천 종류 탭: 다시 그리지 않고 그 자리에서 바꿈 (포커스·스크롤 그대로)
-    if (a === 'rectab') {
-      state.recTab[el.getAttribute('data-key')] = el.getAttribute('data-rec');
+    // 추천 종류 탭(맨 위 하나): 다시 그리지 않고 모든 단원의 묶음만 바꿈 (포커스·스크롤 그대로)
+    if (a === 'reckind') {
+      var k = el.getAttribute('data-rec');
+      var changed = recKind() !== k;
+      state.recKind = k;
       Array.prototype.slice.call(el.parentNode.querySelectorAll('[role="tab"]')).forEach(function (b) {
-        var sel = b === el, p = document.getElementById(b.getAttribute('aria-controls'));
+        var sel = b === el;
         b.setAttribute('aria-selected', String(sel));
         b.setAttribute('tabindex', sel ? '0' : '-1');
-        if (!p) return;
-        if (sel && p.hidden) { p.hidden = false; p.classList.remove('m-tab'); void p.offsetWidth; p.classList.add('m-tab'); }
-        else if (!sel) p.hidden = true;
       });
+      Array.prototype.slice.call(document.querySelectorAll('.rec-group')).forEach(function (g) { g.hidden = g.getAttribute('data-kind') !== k; });
+      var panel = document.getElementById('rec-kind-panel');
+      if (panel) {
+        panel.setAttribute('aria-labelledby', 'rec-kind-' + k);
+        if (changed) { panel.classList.remove('m-tab'); void panel.offsetWidth; panel.classList.add('m-tab'); }
+      }
       el.focus();
       return;
     }
@@ -827,6 +901,11 @@
     }
     if (a === 'restart') { state = freshState(); lastStepIndex = -1; go('info'); return; }
   }
+  // 표지·썸네일을 못 불러오면(자리표시 그림이라 서버가 404 포함) 아이콘 자리표시로 바꿈
+  appEl.addEventListener('error', function (ev) {
+    var t = ev.target;
+    if (t && t.tagName === 'IMG' && t.classList.contains('thumb')) t.outerHTML = thumbPlaceholder(t.getAttribute('data-ph') === 'book');
+  }, true);
   appEl.addEventListener('click', onAction);
   barEl.addEventListener('click', onAction);
   bottomEl.addEventListener('click', onAction);

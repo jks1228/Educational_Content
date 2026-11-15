@@ -15,7 +15,7 @@
 }
 
 /* 1. 화면 전환: 새 화면 내용이 살짝 올라오며 나타남 */
-.m-enter { animation: m-enter var(--dur-base) var(--ease-out) both; }
+.m-enter { animation: m-enter var(--dur-base) var(--ease-out) backwards; }
 @keyframes m-enter {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
@@ -47,7 +47,7 @@
 .m-sweep.is-on::after { transform: scaleX(1); }
 
 /* 5. 진단 결과 수준 상자가 커지며 나타남 */
-.m-reveal { animation: m-reveal 300ms var(--ease-out) 100ms both; }
+.m-reveal { animation: m-reveal 300ms var(--ease-out) 100ms backwards; }
 @keyframes m-reveal {
   from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: none; }

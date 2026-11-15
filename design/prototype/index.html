@@ -3,11 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>진단하기 · 〈서비스 이름〉 (프로토타입)</title>
+<title>진단하기 · 공부길 (프로토타입)</title>
 <link rel="icon" href="../icons/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../mockups/motion.css">
 <style>
   /*
@@ -30,7 +27,8 @@
   @media (min-width: 1024px) { html { scroll-padding-top: 80px; scroll-padding-bottom: 0; } }
   body {
     background: var(--band); color: var(--ink);
-    font-family: 'Gothic A1', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+    /* 한글이 깨끗한 시스템 글꼴 (웹폰트 Gothic A1은 윈도우에서 작은 글씨가 흐리게 보여 뺌, 사용자 요청 2026-11-15) */
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
     font-size: 16px; line-height: 1.6; word-break: keep-all; overflow-wrap: break-word;
   }
   h2, h3, p { margin: 0; }
@@ -149,24 +147,30 @@
   .group-head { font-size: 18px; font-weight: 900; margin-top: 20px; padding-bottom: 6px; }
   .group-head + .item { border-top: 1px solid var(--ink); }
   .scope-note { margin-bottom: 4px; }
-  /* 추천 종류 탭 [영상 강의] [수능 대비] [책 추천] (사용자 요청 2026-11-13): 과목 탭(밑줄)과 다르게 알약 모양, 고른 탭은 진하게 채움 */
-  .rec-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  /* 추천 종류 탭 [영상 강의] [수능 대비] [책 추천]: 추천 맨 위 하나로 모든 단원에 적용 (사용자 요청 2026-11-13, 2026-11-15 통일)
+     과목 탭(밑줄)과 다르게 알약 모양, 고른 탭은 진하게 채움 */
+  .rec-kind-bar { padding-top: 14px; padding-bottom: 14px; }
+  .rec-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
   .rec-tabs button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--ink-soft); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
   .rec-tabs button[aria-selected='true'] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
   .rec-tabs button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   .rec-tabs .kind-icon { width: 18px; height: 18px; }
-  .rec-count { min-width: 22px; padding: 0 6px; border-radius: 999px; background: var(--band); color: var(--ink); font-size: 13px; line-height: 22px; text-align: center; }
-  .rec-tabs button[aria-selected='true'] .rec-count { background: var(--bg); color: var(--ink); }
-  /* 탭 안에서는 묶음 제목이 탭 이름과 같아 화면에서는 숨김(읽기 프로그램·인쇄에는 남김) */
-  @media screen { .rec-panel > .group-head { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; } }
-  .rec-panel { margin-top: 10px; }
+  /* 단원 안의 묶음 제목은 위 탭 이름과 같아 화면에서는 숨김(읽기 프로그램·인쇄에는 남김) */
+  @media screen { .rec-card .group-head { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; } }
+  .rec-group:not([hidden]) { display: flex; flex-direction: column; gap: 8px; }
+  .rec-card .direction + .items, .rec-card .direction + .scope-note { margin-top: 10px; }
+  /* 같은 추천을 공유하는 단원 카드 (사용자 요청 2026-11-15): 제목 '어휘 · 문법 · 독해', 단원마다 배지, '이 단원들은 같은 추천이에요' */
+  .merged-title { font-size: 19px; line-height: 1.45; }
+  .unit-chips { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .unit-chips li { display: inline-flex; align-items: baseline; gap: 6px; font-size: 15px; font-weight: 700; }
+  .same-note { margin-top: 6px; }
   /* 휴대폰: 탭 3개(수능 대비 학생)도 한 줄에 — 같은 너비, 아이콘 숨김 */
   @media (max-width: 479px) {
     .rec-tabs { flex-wrap: nowrap; gap: 6px; }
     .rec-tabs button { flex: 1 1 0; justify-content: center; padding: 0 8px; font-size: 14px; white-space: nowrap; }
     .rec-tabs .kind-icon { display: none; }
   }
-  .m-tab { animation: swap-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .m-tab { animation: swap-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
   .item-reason { font-size: 14px; color: var(--ink); margin-top: 4px; line-height: 1.5; }
   .site-link { margin-top: 8px; font-size: 14px; }
   .site-link a { color: var(--brand); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; display: inline-flex; align-items: center; min-height: 44px; }
@@ -175,6 +179,11 @@
   .area-head + .direction + .item, .direction + .item { margin-top: 10px; }
   .item.video { grid-template-columns: 128px 1fr; }
   .thumb { width: 100%; border-radius: 4px; background: var(--band); display: block; object-fit: cover; }
+  /* 표지·썸네일 없음: 같은 비율의 연한 칸 + 가운데 아이콘 (서점 '상품이미지 없음' 그림 대신) */
+  .thumb-empty { display: flex; align-items: center; justify-content: center; color: var(--ink-soft); }
+  .thumb-empty.book { aspect-ratio: 120 / 174; }
+  .thumb-empty.video { aspect-ratio: 16 / 9; }
+  .thumb-empty .ph-icon { width: 28px; height: 28px; opacity: 0.7; }
   .item.book .thumb { aspect-ratio: 120 / 174; }
   .item.video .thumb { aspect-ratio: 16 / 9; }
   .item-kind { font-size: 13px; color: var(--ink-soft); }
@@ -334,16 +343,29 @@
   @keyframes tick { from { opacity: 0; transform: scale(0.4) rotate(-20deg); } to { opacity: 1; transform: none; } }
   .seg .weak input:checked + span { animation: weak-pulse 360ms ease-out both; }
   @keyframes weak-pulse { from { box-shadow: inset 0 0 0 2px var(--weak); } to { box-shadow: inset 0 0 0 0 transparent; } }
-  .m-swap { animation: swap-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .m-swap { animation: swap-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
   @keyframes swap-in { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
-  .fresh .item { animation: rise 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .fresh .item { animation: rise 320ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
   .fresh .item:nth-child(2) { animation-delay: 60ms; }
   .fresh .item:nth-child(3) { animation-delay: 120ms; }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-  .head.m-enter .step-icon { animation: icon-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .head.m-enter .step-icon { animation: icon-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
   @keyframes icon-in { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) {
     .pick input:checked + span::before, .seg .weak input:checked + span, .m-swap, .m-tab, .fresh .item, .head.m-enter .step-icon { animation: none !important; }
+  }
+
+  /* ---------- 글씨 크기·선명도 (사용자 요청 2026-11-15: "글씨가 너무 깨지거나 글씨가 작습니다") ----------
+     본문 16px(휴대폰도), 보조 글 최소 14px, 배지 최소 13px·굵기 600 이상, 글 줄간격 1.5 이상. 가는 굵기(300) 없음.
+     연한 글자 --ink-soft #5B6372 는 흰 바탕 6.1:1, 회색 띠 #F4F5F7 위 5.6:1 (4.5:1 이상) */
+  .course-of, .item-kind, .source-note, .side .note { font-size: 14px; }
+  .direction, .summary, .lv { font-size: 15px; }
+  .lv { font-weight: 700; }
+  .soft, .item-meta, .item-reason, .direction, .lead, .summary div { line-height: 1.55; }
+  .item-title { line-height: 1.5; }
+  @media (min-width: 1024px) {
+    .steps li, .side h2 { font-size: 16px; }
+    .soft, .item-meta, .item-reason, .item-kind, .group-label, .sub-title, .step-text { font-size: 15px; }
   }
 
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
@@ -351,7 +373,7 @@
   @media print {
     .appbar, .bottom, .tabs, .rec-tabs, .item-actions, .feedback, .restart, .loading, .side { display: none !important; }
     .frame { display: block !important; padding: 0 !important; }
-    .panel[hidden], .rec-panel[hidden] { display: block !important; }
+    .panel[hidden], .rec-group[hidden] { display: block !important; }
     .item.is-hidden { display: none !important; }
     body, .shell { background: #fff; }
   }
