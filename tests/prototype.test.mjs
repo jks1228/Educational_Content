@@ -318,7 +318,8 @@ test('리뷰 반영: "대수능"은 대수 재생목록이 아님, 여러 과목
 
 test('영상 규칙 (사용자 결정 2026-11-12, 교육과정 기준): 2015·2022 과목 모두 2018년 이후, 예비과정 제외, 책은 적용 안 함, 승인된 영상은 모두 규칙 통과', () => {
   const f = src.filters
-  assert.deepEqual(f.minVideoYearByCurriculum, { 2015: 2018, 2022: 2018 })
+  // relaxed: 진로·융합 수학 6과목만 2014년 이후 (사용자 요청 2026-11-15)
+  assert.deepEqual(f.minVideoYearByCurriculum, { 2015: 2018, 2022: 2018, relaxed: 2014 })
   assert.equal(f.preferVideoYearByCurriculum['2022'], 2024)
   assert.equal(H.videoRuleFails({ kind: 'video', year: '2016', title: '수열 1강' }, f, '2015'), 'old')
   assert.equal(H.videoRuleFails({ kind: 'video', year: '2017', title: '수열 1강' }, f, '2022'), 'old')
@@ -482,6 +483,11 @@ test('할당량 적은 방식: 채널 업로드 목록 캐시·서버 안 단원
   const midKo = { school: 'middle', curriculum: '2022', term: '', grades: ['1', '2'], subjLabel: '국어', exam: false }
   assert.equal(H.bookFitsCourse({ title: '중학 국어 비문학 독해 1', year: '2025' }, midKo), true)
   assert.equal(H.bookFitsCourse({ title: '중학 국어 3-1 자습서', year: '2025' }, midKo), false, '그 과목 학년이 아님')
+  // 중학 국어·영어 실력서는 2018년 이후 판 허용, 자습서는 그대로 2024년 이후
+  const midEn = { school: 'middle', curriculum: '2022', term: '', grades: ['1', '2'], subjLabel: '영어', exam: false }
+  assert.equal(H.bookFitsCourse({ title: '수작 중학 비문학 영어 독해 기본', year: '2023' }, midEn), true)
+  assert.equal(H.bookFitsCourse({ title: '중학 영어2 자습서(윤정미 외)', year: '2019' }, midEn), false)
+  assert.equal(H.bookFitsCourse({ title: '중학 영어 독해 완성 Level 3', year: '2015' }, midEn), false)
   const alg = { school: 'high', curriculum: '2022', names: ['대수', '수학Ⅰ'], excludes: ['공통수학', '대수능'], exam: false }
   assert.equal(H.bookFitsCourse({ title: '개념원리 고등 대수 (2025년)', year: '2025' }, alg), true)
   assert.equal(H.bookFitsCourse({ title: '개념원리 공통수학1', year: '2025' }, alg), false)
@@ -546,7 +552,7 @@ test('PC 넓은 레이아웃 (사용자 요청 2026-11-12): 1024px 이상 2단·
 test('추천 화면: 한 과목 탭 안에서 같은 영상·책은 한 번만 (사용자 요청 2026-11-12), 단원 전용 강의가 먼저, 겹쳐서 빈 영역은 안내', () => {
   const app = read('design/prototype/app.js')
   const start = app.indexOf('function dedupe(')
-  const end = app.indexOf('function buildView(')
+  const end = app.indexOf('function groupCards(')
   assert.ok(start > 0 && end > start, 'dedupe 함수가 app.js에 있어야 함')
   const ctx = { remote: {}, out: null }
   new Script('var remote = this.remote; ' + app.slice(start, end) + '; this.dedupe = dedupe;').runInNewContext(ctx)
@@ -641,21 +647,48 @@ test('추천 카드: 보기·숨기기 줄은 카드 맨 아래(같은 줄 카�
   assert.ok(!/class="site-link"/.test(app), '영상 묶음 아래 사이트 바로가기 없음')
 })
 
-test('추천 종류 탭 [영상 강의]·[수능 대비]·[책 추천] (사용자 요청 2026-11-13): 접근성·기본 탭·인쇄·움직임', () => {
+test('추천 종류 탭: 맨 위 하나로 모든 단원 [영상 강의]·[수능 대비]·[책 추천] (사용자 요청 2026-11-15): 접근성·기본 탭·인쇄·움직임', () => {
   const html = read('design/prototype/index.html')
   const app = read('design/prototype/app.js')
   assert.match(app, /class="rec-tabs" role="tablist" aria-label="추천 종류"/)
-  assert.match(app, /role="tab" id="' \+ sid \+ '-tab-' \+ t\.id \+ '" aria-controls="' \+ sid \+ '-panel-'/)
-  assert.match(app, /class="rec-panel" role="tabpanel"/)
-  assert.match(app, /: 'video';/, '기본은 영상 강의')
+  assert.match(app, /role="tab" id="rec-kind-' \+ k\.id \+ '" aria-controls="rec-kind-panel"/)
+  assert.match(app, /id="rec-kind-panel" role="tabpanel" aria-labelledby="rec-kind-/)
+  assert.match(app, /state\.recKind \|\| 'video'/, '기본은 영상 강의')
   assert.match(app, /label: '책 추천'/)
   assert.match(app, /label: '수능 대비'/)
-  assert.match(app, /a === 'rectab'/)
+  assert.match(app, /a === 'reckind'/)
+  assert.ok(!/data-action="rectab"/.test(app), '단원마다 있던 작은 탭은 없음')
+  assert.match(app, /querySelectorAll\('\.rec-group'\)/, '모든 단원의 묶음을 함께 바꿈')
   // 방향키는 role=tab 공통 처리 (과목 탭과 같은 코드)
   assert.match(app, /t\.getAttribute\('role'\) !== 'tab'/)
   assert.match(html, /\.rec-tabs button\[aria-selected='true'\]/)
-  assert.match(html, /\.rec-panel\[hidden\] \{ display: block !important; \}/, '인쇄는 모든 탭 내용')
+  assert.match(html, /\.rec-group\[hidden\] \{ display: block !important; \}/, '인쇄는 모든 묶음')
   assert.match(html, /\.m-swap, \.m-tab,/, 'reduced-motion에서 탭 전환 움직임 끔')
+})
+
+test('같은 채널·같은 책 시리즈 몰림 방지, 단원마다 다른 책 설명 (사용자 캡처 2026-11-15)', () => {
+  const app = read('design/prototype/app.js')
+  const src = app.slice(app.indexOf('function dedupe'), app.indexOf('function groupCards'))
+  const remote = {}
+  const dedupe = new Function('remote', src + '; return dedupe')(remote)
+  const slot = (key, title) => ({ getAttribute: (n) => (n === 'data-key' ? key : title) })
+  const v = (id, ch, forUnit) => ({ url: 'u' + id, channelId: ch, forUnit })
+  remote.a = { videos: [v(1, 'A', true), v(2, 'A', true), v(3, 'A', true), v(4, 'B', true), v(5, 'C', false)] }
+  const out = dedupe([slot('a', '문법')], 'videos', 3, true).lists.a
+  assert.deepEqual(out.map((x) => x.channelId).sort(), ['A', 'A', 'B'], '이 단원 강의 채널마다 1개 먼저, 같은 채널은 2개까지 (단원 밖 C보다 먼저)')
+  remote.c = { videos: [v(1, 'A', true), v(2, 'A', true), v(3, 'A', true), v(5, 'C', false)] }
+  const only = dedupe([slot('c', '문법')], 'videos', 3, true).lists.c
+  assert.deepEqual(only.map((x) => x.channelId).sort(), ['A', 'A', 'C'], '한 채널이 3칸을 다 차지하지 않음')
+  const b = (id, series) => ({ url: 'b' + id, series })
+  remote.x = { books: [b(1, 's1'), b(2, 's2')] }
+  remote.y = { books: [b(3, 's1'), b(4, 's3')] }
+  const bo = dedupe([slot('x', '어휘'), slot('y', '문법')], 'books', 2, false).lists
+  assert.deepEqual(bo.y.map((x) => x.url), ['b4'], '다른 판이라도 같은 시리즈는 과목 탭 안에서 한 번')
+  const r1 = H.bookUnitReason({ title: '중학 영어2 자습서(윤정미 외)', provider: '동아출판' }, '문법')
+  const r2 = H.bookUnitReason({ title: '중학 영어2 자습서(윤정미 외)', provider: '동아출판' }, '어휘')
+  assert.equal(r1, '문법 단원: 교과서 문법 내용을 다시 정리할 때 보는 동아출판 자습서')
+  assert.notEqual(r1, r2)
+  assert.ok(!/최고|강추|1등|추천 1위/.test(r1))
 })
 
 test('과목명 혼동: 같은 교과 다른 과목 이름이 제목에 있으면 뺌, allowOtherNames는 허용 (운영 표본 2026-11-13)', () => {
@@ -670,7 +703,111 @@ test('과목명 혼동: 같은 교과 다른 과목 이름이 제목에 있으�
   // 2022 화법과 언어는 별칭(화법과 작문·언어와 매체)이 자기 이름이라 걸리지 않음
   assert.ok(!H.courseNameConflict('화법과 작문 핵심 정리', H.otherCourseKeys(cur.courses, c('k22-speech'))))
   const approved = recs.items.filter((it) => it.review.status === 'approved' && (it.kind === 'video' || it.kind === 'playlist'))
-  assert.ok(!approved.some((it) => H.courseNameConflict(it.title, H.otherCourseKeys(cur.courses, c(it.courseId)))), '승인 목록에 과목명 혼동 없음')
+  // 진로·융합(relaxedVideo) 과목은 단원 주제가 같은 다른 과목 강의를 일부러 허용 (사용자 요청 2026-11-15)
+  assert.ok(!approved.some((it) => !c(it.courseId).relaxedVideo && H.courseNameConflict(it.title, H.otherCourseKeys(cur.courses, c(it.courseId)))), '승인 목록에 과목명 혼동 없음')
+})
+
+test('진로·융합 수학(relaxedVideo): 예전 교육과정 강의 허용·표시, 다른 과목은 그대로 (사용자 요청 2026-11-15)', () => {
+  const cur = JSON.parse(read('data/curriculum.json'))
+  const c = (id) => cur.courses.find((x) => x.id === id)
+  for (const id of ['m22-econ', 'm22-ai', 'm22-job', 'm22-cult', 'm22-pstat', 'm22-inq']) assert.equal(c(id).relaxedVideo, true, id)
+  assert.ok(!c('m22-geo').relaxedVideo && !c('m22-calc2').relaxedVideo, '이미 채워진 진로 과목은 완화하지 않음')
+  assert.equal(H.ruleCurriculum(c('m22-pstat')), 'relaxed')
+  assert.equal(H.ruleCurriculum(c('m22-alg')), '2022')
+  assert.equal(H.videoRuleFails({ kind: 'video', year: '2016', title: '통계적 탐구' }, src.filters, 'relaxed'), '')
+  assert.equal(H.videoRuleFails({ kind: 'video', year: '2016', title: '수열' }, src.filters, '2022'), 'old')
+  assert.equal(H.oldCurriculumVideo(c('m22-pstat'), { kind: 'video', year: '2019' }), true)
+  assert.equal(H.oldCurriculumVideo(c('m22-pstat'), { kind: 'video', year: '2025' }), false)
+  assert.equal(H.oldCurriculumVideo(c('m22-alg'), { kind: 'video', year: '2019' }), false)
+  assert.match(read('design/prototype/app.js'), /예전 교육과정 강의/)
+})
+
+test('책 카드: 저자 자리표시 값 빼기, 서점 자리표시 표지는 아이콘으로 (운영 지적 2026-11-15)', () => {
+  assert.equal(H.cleanAuthors('미사용인물코드'), '')
+  assert.equal(H.cleanAuthors('김성연, 저자 미상'), '김성연')
+  assert.equal(H.cleanAuthors('윤정미, 이병민'), '윤정미, 이병민')
+  const cfg = { placeholderHashes: [require('crypto').createHash('sha1').update(Buffer.from('ph')).digest('hex')] }
+  assert.equal(H.isPlaceholderCover(Buffer.from('ph'), cfg), true)
+  assert.equal(H.isPlaceholderCover(Buffer.from('real'), cfg), false)
+  assert.ok(src.images.placeholderHashes.length >= 1)
+  const app = read('design/prototype/app.js')
+  assert.match(app, /function thumbPlaceholder/)
+  assert.match(app, /addEventListener\('error'/)
+  assert.match(read('design/prototype/index.html'), /\.thumb-empty\.book \{ aspect-ratio/)
+})
+
+test('글씨 크기·선명도 (사용자 요청 2026-11-15): 시스템 글꼴, 웹폰트 없음, 가는 굵기 없음, 글자 애니메이션은 끝나면 풀림', () => {
+  for (const f of ['design/prototype/index.html', 'design/mockups/landing.html']) {
+    const h = read(f)
+    assert.match(h, /font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR'/, f)
+    assert.ok(!/fonts\.googleapis/.test(h), f + ' 웹폰트 없음')
+    assert.ok(!/font-weight: (100|200|300)\b/.test(h), f + ' 가는 굵기 없음')
+  }
+  const h = read('design/prototype/index.html')
+  assert.match(h, /\.course-of, \.item-kind, \.source-note, \.side \.note \{ font-size: 14px; \}/)
+  for (const cls of ['m-tab', 'm-swap', 'fresh \\.item']) assert.match(h, new RegExp('\\.' + cls + ' \\{ animation: [^}]*backwards;'), cls)
+  assert.match(read('design/mockups/motion.css'), /\.m-enter \{ animation: [^}]*backwards;/)
+})
+
+test('computeRecs: 서버 없이 같은 계산 (1-B 빌드 스크립트가 같이 씀)', () => {
+  const data = { src, curriculum: JSON.parse(read('data/curriculum.json')), items: recs.items, chStats: {} }
+  const r = H.computeRecs({ courses: ['m22-alg'], unit: '수열', school: 'high', purpose: 'both', grade: 'h2', max: 8 }, data)
+  assert.ok(Array.isArray(r.videos) && r.videos.length > 0 && r.videos.length <= 8)
+  assert.ok(r.videos.some((v) => v.forUnit), '이 단원 강의')
+  assert.ok(Array.isArray(r.examVideos) && Array.isArray(r.books))
+  const naesin = H.computeRecs({ courses: ['m22-alg'], unit: '수열', school: 'high', purpose: 'naesin', grade: 'h2' }, data)
+  assert.deepEqual(naesin.examVideos, [], '내신 학생에게는 수능 대비 강의 없음')
+  assert.ok(naesin.videos.length <= 3 && naesin.books.length <= 2, '기본 3개·2권')
+  // 같은 입력이면 같은 결과 (파일·시간에 기대지 않음)
+  assert.deepEqual(H.computeRecs({ courses: ['e-mid'], unit: '문법', school: 'middle', grade: 'm2' }, data), H.computeRecs({ courses: ['e-mid'], unit: '문법', school: 'middle', grade: 'm2' }, data))
+  assert.ok(!/readJson|searchParams/.test(H.computeRecs.toString()), '파일·요청을 직접 다루지 않음')
+})
+
+test('사용자 결정 2026-11-15: 서비스 이름 공부길, 고1 수능 대비 탭 숨김', () => {
+  for (const f of ['design/prototype/index.html', 'design/prototype/app.js', 'design/mockups/landing.html', 'design/icons/favicon.svg']) {
+    const h = read(f)
+    assert.ok(!h.includes('〈서비스 이름〉'), f)
+    assert.ok(h.includes('공부길'), f)
+  }
+  assert.match(read('design/prototype/app.js'), /isHigh\(\) && state\.grade !== 'h1' && \(state\.purpose === 'suneung'/)
+})
+
+test('같은 추천을 공유하는 단원은 카드 하나로, 위 ○○에 있어요 반복 카드 없음 (사용자 요청 2026-11-15)', () => {
+  const app = read('design/prototype/app.js')
+  const src = app.slice(app.indexOf('function dedupe'), app.indexOf('function allConfident'))
+  const remote = {}
+  const groupCards = new Function('remote', src + '; return groupCards')(remote)
+  const v = (u, forUnit, ch) => ({ url: u, forUnit, channelId: ch || u })
+  const course = [v('c1', false), v('c2', false), v('c3', false), v('c4', false)]
+  remote.voc = { videos: course }
+  remote.gram = { videos: course }
+  remote.read = { videos: [v('r1', true), v('r2', true)].concat(course) }
+  remote.listen = { videos: course }
+  const e = (title, key, check) => ({ title, check, q: { key } })
+  const cards = groupCards([e('어휘', 'voc', 'weak'), e('독해', 'read', 'weak'), e('문법', 'gram', 'normal'), e('듣기', 'listen', 'normal')], 'videos', 3, true)
+  assert.equal(cards.length, 2, '어휘·문법·듣기는 한 카드, 독해(단원 전용 강의)는 따로')
+  const merged = cards.find((g) => g.entries.length === 3)
+  assert.deepEqual(merged.entries.map((x) => x.title), ['어휘', '문법', '듣기'])
+  assert.ok(merged.items.length > 0)
+  const read1 = cards.find((g) => g.entries[0].title === '독해')
+  assert.ok(read1.items.some((x) => x.forUnit), '독해 카드는 단원 강의')
+  const all = cards.flatMap((g) => g.items.map((x) => x.url))
+  assert.equal(new Set(all).size, all.length, '카드끼리 겹치지 않음')
+  // 겹쳐서 비게 된 카드는 그 항목이 보이는 카드에 합침
+  remote.a = { books: [{ url: 'b1' }] }
+  remote.b = { books: [{ url: 'b1' }, { url: 'b2' }] }
+  remote.c = { books: [{ url: 'b2' }] }
+  const bc = groupCards([e('가', 'a', 'weak'), e('나', 'b', 'normal'), e('다', 'c', 'normal')], 'books', 2, false)
+  assert.ok(bc.every((g) => g.items.length > 0), '빈 카드 없음')
+  assert.ok(!app.includes('위 ‘\' + title'), '위 ○○에 있어요 문구 만드는 코드 없음')
+  assert.match(app, /이 단원들은 같은 추천이에요/)
+  assert.match(read('design/prototype/index.html'), /\.rec-card \.group-head/)
+})
+
+test('대체 강의 안내: 단원 강의가 없을 때만 "준비하는 동안", 일부 대체면 개수 (운영 표본 2026-11-15)', () => {
+  const app = read('design/prototype/app.js')
+  assert.ok(app.includes("var note = es.length > 1 || !subst ? '' : !own ? '이 단원만 다루는 강의를 준비하는 동안"))
+  assert.match(app, /'이 가운데 ' \+ subst \+ '개는 같은 과목의 다른 단원 강의예요\.'/)
 })
 
 test('책 추천 이유: EBS 교재는 EBS 책에만, 시중 교재는 출판사 정식 이름 + 책 종류 (사용자 캡처 2026-11-13)', () => {
@@ -690,4 +827,20 @@ test('수능 대비 구분: 기출 해설·기출의 미래·실전 모의고사
   assert.ok(H.isExam('[2025학년도 고3 9월 모의평가 해설강의] 미적분', src.filters))
   assert.ok(!H.isExam('지수함수와 로그함수 35분에 끝내기 | 수학1(대수) 2강', src.filters), '개념 강의는 그대로')
   assert.ok(!H.isExam("연계+기출+실전연습 한 번에 끝내기 | 한병훈의 수능완성 '독서' 지문 완벽 분석", src.filters), '고3 수능완성 지문 분석은 개념 칸 (사용자 결정)')
+})
+
+test('1-B screen.css 는 프로토타입 스타일과 같다 (옮긴 뒤 어긋나지 않게)', () => {
+  const src = read('design/prototype/index.html')
+  const proto = src.slice(src.indexOf('<style>') + 7, src.indexOf('</style>')).trim()
+  const web = read('web/app/screen.css')
+  assert.ok(web.includes(proto), 'design/prototype/index.html 의 <style> 을 web/app/screen.css 로 다시 복사')
+})
+
+test('전 과목 시험 해설 재생목록(과목 이름 없음)은 받지 않음 (1-B 시나리오 3 확인 2026-11-15)', () => {
+  assert.equal(H.mixedExamPlaylist('2024학년도 고3 6월 모의평가 해설'), true)
+  assert.equal(H.mixedExamPlaylist('2025학년도 대학수학능력시험 해설강의✍🏻'), true)
+  assert.equal(H.mixedExamPlaylist('[2025학년도 고3 9월 모의평가 해설강의] 언어와 매체'), false)
+  assert.equal(H.mixedExamPlaylist('수능특강 영어 독해'), false)
+  const approved = recs.items.filter((it) => it.review.status === 'approved' && it.kind === 'playlist')
+  assert.ok(!approved.some((it) => H.mixedExamPlaylist(it.title)), '승인 목록에 전 과목 해설 재생목록 없음')
 })
