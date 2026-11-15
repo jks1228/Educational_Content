@@ -4,6 +4,7 @@
   "type": "module",
   "description": "공부길 1-B: Next.js 정적 웹앱 (docs/1b-design.md)",
   "license": "CC-BY-NC-SA-4.0",
+  "engines": { "node": "24.x" },
   "scripts": {
     "recs": "node scripts/build-recs.mjs",
     "dev": "npm run recs && next dev -p 3001 -H 127.0.0.1",

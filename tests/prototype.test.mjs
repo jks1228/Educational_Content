@@ -844,3 +844,16 @@ test('전 과목 시험 해설 재생목록(과목 이름 없음)은 받지 않�
   const approved = recs.items.filter((it) => it.review.status === 'approved' && it.kind === 'playlist')
   assert.ok(!approved.some((it) => H.mixedExamPlaylist(it.title)), '승인 목록에 전 과목 해설 재생목록 없음')
 })
+
+test('Vercel 배포 준비 (Q-8 = Vercel, 2026-11-15): 정적 내보내기·빌드 때 추천 생성·환경 변수 없음', () => {
+  const v = JSON.parse(read('web/vercel.json'))
+  assert.equal(v.framework, 'nextjs')
+  assert.equal(v.outputDirectory, 'out')
+  assert.equal(v.buildCommand, 'npm run build')
+  assert.ok(!('env' in v) && !('build' in v && v.build.env), '환경 변수 없음')
+  const pkg = JSON.parse(read('web/package.json'))
+  assert.match(pkg.scripts.build, /^npm run recs && next build$/, '빌드 때 추천 JSON을 data/에서 다시 만듦')
+  assert.match(read('web/next.config.ts'), /output: 'export'/)
+  const h = v.headers[0].headers.map((x) => x.key + '=' + x.value)
+  assert.ok(h.includes('Referrer-Policy=no-referrer'))
+})
