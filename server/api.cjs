@@ -11,6 +11,7 @@
 
 const fs = require('fs')
 const path = require('path')
+const crypto = require('crypto')
 
 const ROOT = path.join(__dirname, '..')
 const ENV_FILE = path.join(ROOT, '.env.local')
@@ -192,10 +193,12 @@ function otherVideoItems (searchJson, detailJson, ctx) {
   return videoItemsRaw(searchJson, detailJson).filter(function (x) {
     const t = normTitle(x.title)
     return (ctx.ebsAll || ctx.channelIds).indexOf(x.channelId) === -1 && !off[x.channelId] &&
-      x.durationMin >= (ctx.minMinutes || ctx.filters.minVideoMinutes || 20) && !!ctx.unit && titleHasUnit(x.title, ctx.unit) &&
+      x.durationMin >= (ctx.minMinutes || ctx.filters.minVideoMinutes || 20) && !!ctx.unit &&
+      (titleHasUnit(x.title, ctx.unit) || (ctx.altWords || []).some(function (w) { return t.includes(normTitle(w)) })) &&
       !blockWords.some(function (w) { return t.includes(w) }) && !blocked(x.title, ctx.school, ctx.filters) &&
       !videoRuleFails(x, ctx.filters, ctx.curriculum) && !isExam(x.title, ctx.filters) && !gradeConflict(x.title, ctx.gradeLabel) && !termConflict(x.title, ctx.gradeLabel, ctx.term) &&
-      !courseNameConflict(x.title, ctx.otherKeys)
+      !courseNameConflict(x.title, ctx.otherKeys) &&
+      !(ctx.extraBlock || []).some(function (w) { return t.includes(normTitle(w)) })
   }).map(function (x) { x.channelGroup = 'other'; x.unitMatch = true; return x })
 }
 
@@ -240,7 +243,7 @@ function bookItems (kakaoJson, ctx) {
   return (kakaoJson.documents || []).map(function (d) {
     return {
       kind: 'book', sourceId: d.isbn || d.url, title: d.title, provider: pubName(d.publisher),
-      authors: (d.authors || []).join(', '), year: (d.datetime || '').slice(0, 4),
+      authors: cleanAuthors((d.authors || []).join(', ')), year: (d.datetime || '').slice(0, 4),
       thumbnail: d.thumbnail || '', url: d.url || ''
     }
   }).filter(function (b) {
@@ -291,6 +294,16 @@ function minYearFor (filters, curriculum) {
   return by[curriculum] || f.minVideoYear || 0
 }
 
+// 영상 규칙에 쓸 교육과정 열쇠: 영상이 거의 없는 진로·융합 과목(relaxedVideo)은 'relaxed'(예전 강의 허용, 사용자 요청 2026-11-15)
+function ruleCurriculum (course) {
+  if (!course) return ''
+  return course.relaxedVideo ? 'relaxed' : course.curriculum
+}
+// 예전 교육과정 강의 표시: relaxed 과목의 2024년 이전 영상(2022 진로·융합 과목은 2025년부터 배움)
+function oldCurriculumVideo (course, item) {
+  return !!(course && course.relaxedVideo && item.kind !== 'book' && item.kind !== 'course' && Number(item.year) && Number(item.year) < 2024)
+}
+
 function videoRuleFails (item, filters, curriculum) {
   if (!item || item.kind === 'book') return ''
   const f = filters || {}
@@ -319,6 +332,13 @@ function titleHasUnit (title, unit) {
   return parts.some(function (p) { return t.includes(p) })
 }
 
+// 과목 이름 없는 '전 과목 시험 해설' 재생목록 (예: EBSi "2024학년도 고3 6월 모의평가 해설" — 국어부터 모든 과목이 섞임, 1-B 시나리오 확인 2026-11-15)
+function mixedExamPlaylist (title) {
+  const t = String(title || '')
+  const subj = /국어|영어|수학|화법|작문|언어|매체|독서|문학|듣기|독해|어휘|문법|대수|미적분|확률|기하|공통/
+  return /(모의평가|학력평가|대학수학능력시험|수능)\s*해설/.test(t) && !subj.test(t.replace(/대학수학능력시험/g, ''))
+}
+
 // 채널 재생목록에서 과목 이름(별칭 포함)이 제목에 있는 것만 → 항목. 단원 이름까지 있으면 unitMatch
 function matchPlaylists (list, names, unit, ctx, excludes) {
   const ns = names.map(normTitle).filter(Boolean)
@@ -338,7 +358,8 @@ function matchPlaylists (list, names, unit, ctx, excludes) {
     const t = normTitle(x.title)
     return ctx.channelIds.indexOf(x.channelId) !== -1 && x.itemCount >= 2 && ns.some(function (n) { return t.includes(n) }) &&
       !ex.some(function (e) { return t.includes(e) }) && !mixedCourses(x.title, ctx.filters) && !blocked(x.title, ctx.school, ctx.filters) && !videoRuleFails(x, ctx.filters, ctx.curriculum) &&
-      !gradeConflict(x.title, ctx.gradeLabel) && !termConflict(x.title, ctx.gradeLabel, ctx.term) && !courseNameConflict(x.title, ctx.otherKeys)
+      !gradeConflict(x.title, ctx.gradeLabel) && !termConflict(x.title, ctx.gradeLabel, ctx.term) && !courseNameConflict(x.title, ctx.otherKeys) &&
+      !mixedExamPlaylist(x.title)
   }).map(function (x) { x.unitMatch = !!unit && titleHasUnit(x.title, unit); return x })
     // 중학교 학기 과목의 과목 전체('*') 재생목록은 제목에 그 학년·학기 표시가 있어야 함
     // (과목 이름이 '수학'뿐이라 다른 학년에 걸림, 표본 검사 권장 1). 학기 없는 과목(중학 영어 등)은 다른 학년 표시만 뺌
@@ -733,10 +754,16 @@ function bookFitsCourse (b, bc) {
   const ed = Math.max.apply(null, [0].concat((raw.match(/\((20\d\d)\)/g) || []).map(function (x) { return Number(x.replace(/\D/g, '')) })))
   const sat = (raw.match(/(20\d\d)\s*수능\s*대비/) || [])[1]
   // 2022 과목: 2024년 이후 책. 2027학년도 수능까지는 2015 교육과정이라 그 수능 대비 교재는 뺌
-  if (bc.curriculum === '2022' && (y < 2024 || t.includes('2015') || t.includes('15개정') || (sat && Number(sat) <= 2027))) return false
+  // 진로·융합 과목(relaxed)은 같은 이름의 2015 판 교재도 허용 (2015년 이후)
+  if (bc.relaxed && y && y < 2015) return false
+  // 중학 국어·영어(학년 공통 과목)의 독해·문법·어휘 실력서는 교과서와 무관 → 2018년 이후 판 허용 (중2 영어 독해 책 0권, 2026-11-15)
+  const skillBook = bc.school === 'middle' && !bc.term && !/자습서|교과서|평가/.test(raw)
+  if (skillBook && y && y < 2018) return false
+  if (!bc.relaxed && !skillBook && bc.curriculum === '2022' && (y < 2024 || t.includes('2015') || t.includes('15개정') || (sat && Number(sat) <= 2027))) return false
   if (bc.curriculum === '2015' && t.includes('22개정')) return false
   // 2015 과목: 2018~2024년 책 (같은 이름의 2022 과목 새 판이 2025년부터 나옴). '2015'가 제목에 있으면 연도 무관. 2027년 이후 판은 안 됨
-  if (bc.curriculum === '2015' && (t.includes('2022') || ed >= 2027 || (!t.includes('2015') && (y < 2018 || y >= 2025)))) return false
+  // '2015'는 '2015 개정'·'15개정'일 때만 교육과정 표시로 봄 (판 연도 "(2015)"는 2009 교육과정 책, 2026-11-15)
+  if (bc.curriculum === '2015' && (t.includes('2022') || ed >= 2027 || (!/2015개정|15개정/.test(t) && (y < 2018 || y >= 2025)))) return false
   if (!bc.exam && /기출|모의고사/.test(t) && !(bc.school === 'middle' && t.includes('듣기'))) return false
   if ((bc.excludes || []).some(function (e) { const n = normTitle(e); return n && t.includes(n) })) return false
   if (bc.school === 'middle') {
@@ -820,22 +847,54 @@ function today () { return new Date().toLocaleDateString('sv-SE', { timeZone: 'A
 // 학생 화면에 보낼 모양 (내부 필드는 빼고)
 function publicItem (it) {
   return {
-    id: it.id, kind: it.kind, title: it.title, provider: it.provider, authors: it.authors || '', year: it.year || '',
+    id: it.id, kind: it.kind, title: it.title, provider: it.provider, authors: cleanAuthors(it.authors), year: it.year || '',
     url: it.url, thumbnail: it.thumbnail, durationMin: it.durationMin || 0, itemCount: it.itemCount || 0,
     teacher: it.teacher || '', channelGroup: it.channelGroup || (it.kind === 'course' ? 'ebsi' : it.kind === 'book' ? '' : 'ebs'),
     // 학생 화면의 "확인한 날" = 사람이 승인한 날 (후보 찾기를 다시 돌린 날이 아님 — 리뷰 권장 3)
-    isFree: !!it.isFree, reason: it.reason || '', lastCheckedAt: (it.review && it.review.approvedAt) || it.lastCheckedAt || ''
+    isFree: !!it.isFree, reason: it.reason || '', lastCheckedAt: (it.review && it.review.approvedAt) || it.lastCheckedAt || '',
+    // 화면이 채널마다 1개씩 고르고(같은 채널 3개 방지), 같은 시리즈 책을 한 번만 보이게 쓰는 열쇠 (사용자 캡처 2026-11-15)
+    channelId: it.kind === 'book' ? '' : (it.channelId || ''), series: it.kind === 'book' ? seriesKey(it.title) : ''
   }
+}
+
+// 단원마다 다른 책 설명 (사용자 요청 2026-11-15: 같은 책이 여러 단원에 같은 문구로 나옴). 사실만, 광고·평가 문구 없음
+// 예) "문법 단원: 교과서 문법 내용을 다시 정리할 때 보는 동아출판 자습서"
+function bookUnitReason (it, unit) {
+  const type = bookType(it.title)
+  const pub = pubName(it.provider)
+  const by = pub ? pub + ' ' : ''
+  const desc = {
+    자습서: '교과서 ' + unit + ' 내용을 다시 정리할 때 보는 ' + by + '자습서',
+    평가문제집: '학교 시험 전에 ' + unit + ' 문제를 풀어 보는 ' + by + '평가문제집',
+    문제집: unit + ' 유형 문제를 연습하는 ' + by + '문제집',
+    개념서: unit + ' 개념을 처음부터 정리하는 ' + by + '개념서',
+    교재: unit + ' 내용을 함께 공부할 수 있는 ' + by + '교재'
+  }[type]
+  return unit + ' 단원: ' + desc
 }
 
 /* ---------- 이미지 중계 ---------- */
 const imgCache = new Map()
+// 자리표시 표지인가 (images.placeholderHashes: 그림 내용의 SHA-1. 여러 책에 똑같이 쓰인 그림을 확인해 넣음)
+function isPlaceholderCover (buf, cfg) {
+  const list = (cfg && cfg.placeholderHashes) || []
+  if (!list.length) return false
+  return list.indexOf(crypto.createHash('sha1').update(buf).digest('hex')) !== -1
+}
+
+// 책 저자 칸: 카카오 자리표시 값('미사용인물코드', '저자 미상' 등)은 뺌 (운영 지적 2026-11-15)
+function cleanAuthors (s) {
+  return String(s || '').split(',').map(function (a) { return a.trim() })
+    .filter(function (a) { return a && !/^(미사용인물코드|저자\s*미상|작자\s*미상|미상|unknown)$/i.test(a) }).join(', ')
+}
+
 async function handleImg (u, res, cfg) {
   const known = new Set(readJson(DATA.recs).items.map(function (it) { return it.thumbnail }).filter(Boolean))
   const target = imgAllowed(u.searchParams.get('u') || '', cfg.allowedHosts, known)
   if (!target) return send(res, 400, { reason: 'not-allowed' })
   const ck = target.href
   const hit = imgCache.get(ck)
+  if (hit && hit.none) return send(res, 404, { reason: 'no-cover' })
   if (hit) { res.writeHead(200, { 'Content-Type': hit.type, 'Cache-Control': 'private, max-age=86400' }); return res.end(hit.buf) }
   try {
     // 넘겨주기(redirect)는 따라가지 않음: 허용 도메인 밖으로 나가는 것을 막음
@@ -853,6 +912,8 @@ async function handleImg (u, res, cfg) {
     }
     const buf = Buffer.concat(chunks)
     if (imgCache.size >= cfg.cacheMax) imgCache.delete(imgCache.keys().next().value)
+    // 서점의 '제공된 상품이미지가 없습니다' 그림은 표지가 아님 → 없음으로 알려 화면이 책 아이콘을 보이게 (운영 지적 2026-11-15)
+    if (isPlaceholderCover(buf, cfg)) { imgCache.set(ck, { none: true }); return send(res, 404, { reason: 'no-cover' }) }
     imgCache.set(ck, { type: type, buf: buf })
     res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'private, max-age=86400' })
     res.end(buf)
@@ -928,29 +989,43 @@ function bookScore (it, unit, units, filters, names) {
 
 // 같은 시리즈의 다른 판(괄호 안 연도, '완성 2000제' 등)을 하나로 보는 열쇠
 function seriesKey (title) {
-  return normTitle(String(title || '').replace(/\([^)]*\)/g, '')).replace(/\d+제?/g, '').replace(/완성|국어|영어|수학/g, '')
+  // 단계만 다른 같은 시리즈(기본·실력·완성·Level 1 등)도 하나로 (중2 영어 독해 '수작 … 기본/완성', 2026-11-15)
+  return normTitle(String(title || '').replace(/\([^)]*\)/g, '')).replace(/level|lv\.?/g, '').replace(/\d+제?/g, '')
+    .replace(/완성|기본|실력|심화|입문|발전|국어|영어|수학/g, '')
 }
 
 /* ---------- 승인된 추천 ---------- */
+// 미리보기 서버: 주소에서 값을 읽고 파일을 연 뒤 computeRecs 결과를 보냄
 function handleRecs (u, res) {
   const courses = (u.searchParams.get('course') || '').split(',').filter(Boolean)
-  const unit = u.searchParams.get('unit') || '*'
   if (!courses.length) return send(res, 400, { reason: 'no-course' })
-  const src = readJson(DATA.sources)
+  send(res, 200, computeRecs({
+    courses: courses, unit: u.searchParams.get('unit') || '*', school: u.searchParams.get('school') || '',
+    purpose: u.searchParams.get('purpose') || '', grade: u.searchParams.get('grade') || '', max: u.searchParams.get('max')
+  }, { src: readJson(DATA.sources), curriculum: readJson(DATA.curriculum), items: readJson(DATA.recs).items, chStats: readStats().channels || {} }))
+}
+
+// 추천 계산 (순수 함수: 파일·요청을 직접 다루지 않음). 미리보기 서버와 1-B 빌드 스크립트가 같이 씀 (docs/1b-design.md 2-1)
+// q = { courses: [과목 id…], unit, school: 'middle'|'high', purpose, grade: 'm1'…'h3', max }
+// data = { src: sources.json, curriculum: curriculum.json, items: recommendations.json items, chStats: 채널 id → { subs } }
+function computeRecs (q, data) {
+  const courses = q.courses
+  const unit = q.unit || '*'
+  const src = data.src
   const filters = src.filters
   // 사용자가 끈 다른 선생님 채널 (sources.otherChannels enabled:false)
   const offOther = {}
   ;(src.otherChannels || []).forEach(function (c) { if (c.enabled === false) offOther[c.id] = true })
   // 수능 해설은 학습 목적이 '수능 대비'·'둘 다'인 학생에게만
-  const purpose = u.searchParams.get('purpose') || ''
+  const purpose = q.purpose || ''
   const wantsExam = purpose === 'suneung' || purpose === 'both'
   // 코스 id → 교육과정 (연도 기준이 교육과정마다 다름)
-  const curOf = {}
-  readJson(DATA.curriculum).courses.forEach(function (c) { curOf[c.id] = c.curriculum })
+  const curOf = {}, courseOf = {}
+  data.curriculum.courses.forEach(function (c) { curOf[c.id] = c.curriculum; courseOf[c.id] = c })
   const usable = function (it) {
     if (!it.review || it.review.status !== 'approved' || courses.indexOf(it.courseId) === -1) return false
     // 규칙 위반(오래된·예비과정) 영상, 사용자가 끈 채널은 승인돼 있어도 내보내지 않음
-    if (videoRuleFails(it, filters, curOf[it.courseId])) return false
+    if (videoRuleFails(it, filters, ruleCurriculum(courseOf[it.courseId]))) return false
     if (it.channelGroup === 'other' && offOther[it.channelId]) return false
     return true
   }
@@ -962,13 +1037,13 @@ function handleRecs (u, res) {
     return curOf[it.courseId] === '2022' && isEbsLinked(it.title)
   }
   // 영상은 그 단원·과목 전체, 책은 과목 단위라 단원과 상관없이 그 과목(코스) 것
-  const all = readJson(DATA.recs).items.filter(function (it) {
+  const all = data.items.filter(function (it) {
     if (!usable(it)) return false
     return it.kind === 'book' || unit === '*' || it.unit === unit || it.unit === '*'
   })
   // 이 단원 항목 먼저 → 같은 묶음 안에서는 추천순 (출처 구분 없음, 사용자 결정 2026-11-12 EBS 우선순위 폐지)
   // 인기도(조회수·채널 구독자수·최근성)를 추천 점수에 더함 (사용자 요청 2026-11-12)
-  const chStats = readStats().channels || {}
+  const chStats = data.chStats || {}
   const order = function (list) {
     const sorted = sortRecs(list.map(function (it) {
       const subs = (chStats[it.channelId] || {}).subs
@@ -1011,23 +1086,25 @@ function handleRecs (u, res) {
     return picked.sort(function (a, b) { return cand.indexOf(a) - cand.indexOf(b) }).map(function (it) {
       const p = publicItem(it)
       p.forUnit = unit !== '*' && it.unit === unit
+      // 진로·융합 과목에 넣은 예전 교육과정 강의는 화면에 작게 표시 (사용자 요청 2026-11-15)
+      if (oldCurriculumVideo(courseOf[it.courseId], it)) p.oldCurriculum = true
       return p
     })
   }
   const pick = function (kinds, max, filterFn) {
     return uniq(order(all.filter(function (it) { return kinds.indexOf(it.kind) !== -1 && (!filterFn || filterFn(it)) })), max)
   }
-  const school = u.searchParams.get('school') === 'middle' ? 'middle' : 'high'
+  const school = q.school === 'middle' ? 'middle' : 'high'
   const link = (src.siteLinks || {})[school]
   // max: 화면이 과목 탭 안에서 중복을 뺀 뒤 다음 후보로 채울 수 있게 여유분을 받을 때 (최대 8). 화면이 3개·2권으로 다시 줄임
-  const askMax = Math.min(Math.max(Number(u.searchParams.get('max')) || 0, 0), 8)
+  const askMax = Math.min(Math.max(Number(q.max) || 0, 0), 8)
   const maxV = askMax || show.maxVideosPerArea || 3
   const VKINDS = ['course', 'playlist', 'video']
   // 영역당 강의 최대 3개, 책 최대 2권 (사용자 결정 2026-11-12, data/sources.json display). 해설강의는 빼고
   let videos = pick(VKINDS, maxV, function (it) { return !exam(it) })
   // 이 단원 강의가 아직 없으면: 같은 과목의 다른 단원 승인 강의로 대체 (사용자 피드백: 대수 '수열'이 비어 보임)
   if (!videos.length && unit !== '*') {
-    videos = uniq(order(readJson(DATA.recs).items.filter(function (it) {
+    videos = uniq(order(data.items.filter(function (it) {
       return usable(it) && VKINDS.indexOf(it.kind) !== -1 && !exam(it)
     })), maxV)
   }
@@ -1041,14 +1118,14 @@ function handleRecs (u, res) {
   // 책: 단원에 맞게 (사용자 요청 2026-11-12). 같은 시리즈의 다른 판은 한 권만
   function pickBooks () {
     const units = [], names = []
-    readJson(DATA.curriculum).courses.forEach(function (c) {
+    data.curriculum.courses.forEach(function (c) {
       if (courses.indexOf(c.id) === -1) return
       units.push.apply(units, c.units)
       names.push.apply(names, [c.label].concat(c.searchAlias || []))
     })
     const seenSeries = {}
-    const g = /^[mh][123]$/.test(u.searchParams.get('grade') || '') ? u.searchParams.get('grade') : ''
-    const examCourse = readJson(DATA.curriculum).courses.some(function (c) { return courses.indexOf(c.id) !== -1 && c.group === 'exam' })
+    const g = /^[mh][123]$/.test(q.grade || '') ? q.grade : ''
+    const examCourse = data.curriculum.courses.some(function (c) { return courses.indexOf(c.id) !== -1 && c.group === 'exam' })
     const ok = function (it) {
       // 수능 연계·기출 교재는 수능 대비 학생만 (수능 과목은 예외)
       if (school === 'high' && !wantsExam && !examCourse && isExamBook(it.title)) return false
@@ -1065,15 +1142,18 @@ function handleRecs (u, res) {
       .map(function (it, i) { return { it: it, s: bookScore(it, unit, units, filters, names, src.publishers), i: i } })
       .sort(function (a, b) { return (b.s - a.s) || (a.i - b.i) })
       .map(function (x) { return x.it })
-    return uniq(books.filter(ok), askMax || show.maxBooksPerArea || 2)
+    return uniq(books.filter(ok), askMax || show.maxBooksPerArea || 2).map(function (p) {
+      if (unit !== '*') p.reason = bookUnitReason(p, unit)
+      return p
+    })
   }
-  send(res, 200, {
+  return {
     videos: videos,
     videosScope: videosScope,
     examVideos: examVideos,
     books: pickBooks(),
     siteLink: link ? { label: link.label, url: link.url } : null
-  })
+  }
 }
 
 /* ---------- 후보 찾기 ---------- */
@@ -1089,7 +1169,7 @@ async function handleCollect (req, res) {
   const name = course.group === 'term' || course.group === 'all' ? subjLabel : (course.search || course.label)
   const gradeLabel = (grade[0] === 'h' ? '고' : '중') + grade[1]
   const ctx = {
-    school: school, filters: src.filters, publishers: src.publishers, unit: unit, curriculum: course.curriculum,
+    school: school, filters: src.filters, publishers: src.publishers, unit: unit, curriculum: ruleCurriculum(course),
     channelIds: src.youtubeChannels.filter(function (c) { return c.school === school }).map(function (c) { return c.id }),
     // 모든 EBS 채널(다른 선생님 강의와 구분용), 사용자가 끈 다른 선생님 채널
     ebsAll: src.youtubeChannels.map(function (c) { return c.id }),
@@ -1112,10 +1192,14 @@ async function handleCollect (req, res) {
   // 중학교 학기 과목: '1학기' → '1' (과목 전체 재생목록의 학년·학기 표시 확인용)
   ctx.term = school === 'middle' && course.group === 'term' ? String(course.label || '').charAt(0) : ''
   // 같은 교과 다른 과목 이름이 제목에 있으면 뺌 (과목명 혼동, 운영 표본 2026-11-13)
-  ctx.otherKeys = otherCourseKeys(cur.courses, course)
+  // 진로·융합(relaxed) 과목은 단원 주제가 같은 다른 과목 강의(예: 통계적 탐구 ← 확률과 통계 통계 단원)도 허용 (사용자 요청 2026-11-15)
+  ctx.otherKeys = course.relaxedVideo ? [] : otherCourseKeys(cur.courses, course)
   // 원래 짧은 유형의 단원은 최소 길이를 낮춤 (예: 영어 어휘·듣기 10분, filters.minVideoMinutesByUnit)
   const shortRule = ((src.filters.minVideoMinutesByUnit || {})[course.subject] || {})
   if (unit && shortRule[unit]) ctx.minMinutes = shortRule[unit]
+  // 영상이 거의 없는 진로·융합 과목: 10분 이상, 대학 전공·공무원·자격증 강의는 뺌 (사용자 요청 2026-11-15, filters.relaxedVideo)
+  const relaxed = course.relaxedVideo ? (src.filters.relaxedVideo || {}) : null
+  if (relaxed) { ctx.minMinutes = relaxed.minMinutes || 10; ctx.extraBlock = relaxed.blockWords || [] }
   try {
     let pls = [], vids = [], others = []
     if (!booksOnly && !useSearch && body.searchOther !== true) {
@@ -1133,7 +1217,13 @@ async function handleCollect (req, res) {
     // 다른 선생님 검색만 (EBS 채널은 캐시에 이미 있음, 단원당 101 units): body.searchOther === true
     if (!booksOnly && body.searchOther === true && unit) {
       if (usedToday() >= DAILY_UNIT_LIMIT) return send(res, 429, { reason: 'daily-limit', usedToday: usedToday() })
-      others = await searchOtherVideos(q, ctx, keys.YOUTUBE_API_KEY, usage)
+      // 진로·융합(relaxed) 과목만: 다른 검색어(altQuery, 40자)와 단원 대신 맞출 말(altWords, 6개) 허용 (빈 단원 재검색, 사용자 요청 2026-11-15)
+      let sq = q
+      if (course.relaxedVideo) {
+        if (typeof body.altQuery === 'string' && body.altQuery.trim()) sq = body.altQuery.trim().slice(0, 40)
+        if (Array.isArray(body.altWords)) ctx.altWords = body.altWords.filter(function (w) { return typeof w === 'string' && w.trim().length >= 2 }).slice(0, 6).map(function (w) { return w.trim().slice(0, 20) })
+      }
+      others = await searchOtherVideos(sq, ctx, keys.YOUTUBE_API_KEY, usage)
       recordOtherChannels(others)
     }
     if (!booksOnly && useSearch) {
@@ -1153,7 +1243,7 @@ async function handleCollect (req, res) {
     ctx.bookCourse = {
       names: [name].concat(course.searchAlias || [], course.bookSearch || []), excludes: course.searchExclude || [], school: school,
       curriculum: course.curriculum, term: course.group === 'term' ? String(course.label).charAt(0) : '', grades: grades,
-      exam: course.group === 'exam', subjLabel: subjLabel,
+      exam: course.group === 'exam', subjLabel: subjLabel, relaxed: !!course.relaxedVideo,
       // 2015 과목 이름 중 이 과목 자기 이름이 아닌 것 (문학·기하처럼 두 교육과정에 같은 이름이 있으면 자기 이름은 그대로 씀)
       oldNames: course.curriculum === '2022' ? cur.courses.filter(function (c) { return c.curriculum === '2015' }).map(function (c) { return normTitle(c.label) })
         .filter(function (n) { return n !== normTitle(name) }) : []
@@ -1421,7 +1511,7 @@ async function handleReview (req, res) {
     if (why) return why
     // 2020년 이전·예비과정 영상은 승인할 수 없음 (사용자 결정 2026-11-12)
     const itCourse = cur.courses.filter(function (x) { return x.id === it.courseId })[0]
-    if (body.status === 'approved' && videoRuleFails(it, srcFilters, itCourse && itCourse.curriculum)) return 'video-rule'
+    if (body.status === 'approved' && videoRuleFails(it, srcFilters, ruleCurriculum(itCourse))) return 'video-rule'
     // 제외 사유(선택, 100자): 내부 기록용
     if (typeof body.note === 'string' && body.note.trim()) it.review.note = body.note.trim().slice(0, 100)
     // 이유 고치기(선택): 글을 보냈으면 그것을, 아니면 승인할 때 비어 있으면 자동으로
@@ -1466,4 +1556,4 @@ async function apiMiddleware (req, res, next) {
 }
 
 module.exports = apiMiddleware
-module.exports.helpers = { bookFitsUnit, seriesKey, uploadsPlaylistId, uploadRows, mergeUploads, gradeConflict, gradeMarked, bookFitsCourse, bookQueries, isExamBook, bookGradeOk, bookScore, popScore, videoIdOf, termConflict, isEbsLinked, pubName, bookType, otherCourseKeys, courseNameConflict, matchUploads, parseYouTubeUrl, parseChannelRef, validChannelId, quotaDay, today,sourceGroup, isExam, otherVideoItems, videoRuleFails, normTitle, matchPlaylists, mixedCourses, titleHasUnit, isoMinutes, blocked, rankScore, sortRecs, canSetStatus, autoReason, imgAllowed, playlistItems, videoItems, bookItems, publicItem }
+module.exports.helpers = { bookFitsUnit, seriesKey, uploadsPlaylistId, uploadRows, mergeUploads, gradeConflict, gradeMarked, bookFitsCourse, bookQueries, isExamBook, bookGradeOk, bookScore, popScore, videoIdOf, termConflict, isEbsLinked, pubName, bookType, computeRecs, mixedExamPlaylist, otherCourseKeys, courseNameConflict, bookUnitReason, ruleCurriculum, oldCurriculumVideo, cleanAuthors, isPlaceholderCover, matchUploads, parseYouTubeUrl, parseChannelRef, validChannelId, quotaDay, today,sourceGroup, isExam, otherVideoItems, videoRuleFails, normTitle, matchPlaylists, mixedCourses, titleHasUnit, isoMinutes, blocked, rankScore, sortRecs, canSetStatus, autoReason, imgAllowed, playlistItems, videoItems, bookItems, publicItem }
