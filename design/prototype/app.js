@@ -64,7 +64,7 @@
   /* ---------- 상태 (메모리만) ---------- */
   var state = freshState();
   function freshState() {
-    return { grade: null, subjects: [], courses: {}, purpose: null, scores: {}, checks: {}, tab: { areas: null, recommend: null }, hidden: {}, feedback: null, errors: {}, notice: null };
+    return { grade: null, subjects: [], courses: {}, purpose: null, scores: {}, checks: {}, tab: { areas: null, recommend: null }, recTab: {}, hidden: {}, feedback: null, errors: {}, notice: null };
   }
   var lastStepIndex = -1;
 
@@ -225,6 +225,8 @@
       key: 'course=' + encodeURIComponent(courses.join(',')) + '&unit=' + encodeURIComponent(a && !a.whole ? a.label : '*') + '&school=' + (isHigh() ? 'high' : 'middle') +
         // 학습 목적만 보냄(수능 해설을 보여 줄지 정하는 데만 씀, 성적은 보내지 않음)
         (isHigh() && state.purpose ? '&purpose=' + state.purpose : '') +
+        // 학년(m2 등): 여러 학년이 같은 과목(중학 국어·영어)일 때 다른 학년 책을 빼는 데만 씀
+        (state.grade ? '&grade=' + state.grade : '') +
         // 여유 후보까지 받아 과목 탭 안에서 중복을 뺀 뒤 3개·2권으로 줄임
         '&max=8'
     };
@@ -532,11 +534,38 @@
     var site = '';
     // 이 단원 강의가 아직 없으면 같은 과목 강의로 대신 보여 주고 그렇다고 알림
     var scopeNote = w.videos.some(function (it) { return !it.forUnit; }) ? '이 단원만 다루는 강의를 준비하는 동안, 같은 과목의 강의를 보여 줘요.' : '';
-    // 수능 해설강의: 수능 대비 학생에게만, 개념 강의와 따로 (서버가 그때만 보냄)
-    var exam = w.exam.length || w.examAt
-      ? groupHtml('수능 대비', w.exam, at(w.examAt, '수능 대비 강의는'), '', '수능·모의고사 문제를 풀고 해설하는 강의예요. 개념을 익힌 뒤에 보면 좋아요.') : '';
-    return groupHtml('영상 강의', w.videos, at(w.videosAt, '강의는') || '확인을 마친 무료 강의를 준비하고 있어요.', site, scopeNote) + exam +
-      groupHtml('책', w.books, at(w.booksAt, '책은') || '확인을 마친 책을 준비하고 있어요.');
+    // 영상·책을 탭으로 나눔 (사용자 요청 2026-11-13). 기본은 영상 강의
+    var tabs = [
+      { id: 'video', label: '영상 강의', icon: 'i-lecture', items: w.videos, html: groupHtml('영상 강의', w.videos, at(w.videosAt, '강의는') || '확인을 마친 무료 강의를 준비하고 있어요.', site, scopeNote) }
+    ];
+    // 수능 해설강의: 수능 대비 학생에게만, 개념 강의와 따로 (서버가 그때만 보냄) → 탭 하나 더
+    if (w.exam.length || w.examAt) {
+      tabs.push({ id: 'exam', label: '수능 대비', icon: 'i-lecture', items: w.exam, html: groupHtml('수능 대비', w.exam, at(w.examAt, '수능 대비 강의는'), '', '수능·모의고사 문제를 풀고 해설하는 강의예요. 개념을 익힌 뒤에 보면 좋아요.') });
+    }
+    tabs.push({ id: 'book', label: '책 추천', icon: 'i-book', items: w.books, html: groupHtml('책', w.books, at(w.booksAt, '책은') || '확인을 마친 책을 준비하고 있어요.') });
+    return recTabsHtml(key, tabs);
+  }
+
+  // 슬롯마다 탭 id가 겹치지 않게 짧은 번호를 붙임
+  var slotNo = {}, slotCount = 0;
+  function slotId(key) { if (!slotNo[key]) slotNo[key] = 'rec' + (++slotCount); return slotNo[key]; }
+
+  // [영상 강의] [수능 대비] [책 추천] 탭 + 탭마다 내용 (role=tablist/tab/tabpanel, 방향키는 아래 keydown 처리)
+  function recTabsHtml(key, tabs) {
+    var sid = slotId(key);
+    var cur = tabs.some(function (t) { return t.id === state.recTab[key]; }) ? state.recTab[key] : 'video';
+    var h = '<div class="rec-tabs" role="tablist" aria-label="추천 종류">';
+    tabs.forEach(function (t) {
+      var sel = t.id === cur;
+      var n = t.items.filter(function (it) { return !state.hidden[it.id]; }).length;
+      h += '<button type="button" role="tab" id="' + sid + '-tab-' + t.id + '" aria-controls="' + sid + '-panel-' + t.id + '" aria-selected="' + sel + '" tabindex="' + (sel ? 0 : -1) + '" data-action="rectab" data-key="' + esc(key) + '" data-rec="' + t.id + '">' +
+        icon(t.icon, 'kind-icon') + t.label + '<span class="rec-count">' + n + '<span class="sr-only">개</span></span></button>';
+    });
+    h += '</div>';
+    tabs.forEach(function (t) {
+      h += '<div class="rec-panel" role="tabpanel" id="' + sid + '-panel-' + t.id + '" aria-labelledby="' + sid + '-tab-' + t.id + '"' + (t.id === cur ? '' : ' hidden') + '>' + t.html + '</div>';
+    });
+    return h;
   }
 
   function fillSlot(slot) {
@@ -762,6 +791,20 @@
     if (a === 'tab') {
       state.tab[el.getAttribute('data-kind')] = el.getAttribute('data-subject');
       render(step, { focusId: 'tab-' + el.getAttribute('data-kind') + '-' + el.getAttribute('data-subject') });
+      return;
+    }
+    // 추천 종류 탭: 다시 그리지 않고 그 자리에서 바꿈 (포커스·스크롤 그대로)
+    if (a === 'rectab') {
+      state.recTab[el.getAttribute('data-key')] = el.getAttribute('data-rec');
+      Array.prototype.slice.call(el.parentNode.querySelectorAll('[role="tab"]')).forEach(function (b) {
+        var sel = b === el, p = document.getElementById(b.getAttribute('aria-controls'));
+        b.setAttribute('aria-selected', String(sel));
+        b.setAttribute('tabindex', sel ? '0' : '-1');
+        if (!p) return;
+        if (sel && p.hidden) { p.hidden = false; p.classList.remove('m-tab'); void p.offsetWidth; p.classList.add('m-tab'); }
+        else if (!sel) p.hidden = true;
+      });
+      el.focus();
       return;
     }
     if (a === 'hide') {

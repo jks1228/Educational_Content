@@ -65,6 +65,8 @@ function decodeEntities (s) {
     .replace(/&#(\d+);/g, function (_, n) { return String.fromCharCode(Number(n)) })
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
+    // 일부 제목은 한글이 자모로 풀린 꼴(NFD)이라 단원·차단어 비교가 안 됨 → 표준 꼴(NFC)로 (확인 2026-11-12, EBSi 등 18건)
+    .normalize('NFC')
 }
 
 // ISO 8601 길이(PT1H2M3S) → 분
@@ -76,7 +78,7 @@ function isoMinutes (iso) {
 
 // 제목 거르기: 쇼츠·홍보 같은 말, 학년이 안 맞는 말
 function blocked (title, school, filters) {
-  const t = String(title || '').toLowerCase()
+  const t = String(title || '').normalize('NFC').toLowerCase()
   if ((filters.titleBlockWords || []).some(function (w) { return t.includes(w.toLowerCase()) })) return true
   return ((filters.gradeBlockWords || {})[school] || []).some(function (w) { return t.includes(w.toLowerCase()) })
 }
@@ -113,6 +115,23 @@ function canSetStatus (item, status) {
   return ''
 }
 
+// 출판사 정식 이름 (카카오 자료의 '천재교육사'·'미래엔에듀'·'EBS한국교육방송공사' 등 → 화면용, 운영 지적 2026-11-13)
+const PUBLISHER_NAMES = { '천재교육사': '천재교육', '미래엔에듀': '미래엔', 'EBS한국교육방송공사': 'EBS', '한국교육방송공사(EBSi)': 'EBS', '한국교육방송공사': 'EBS' }
+function pubName (p) {
+  const s = String(p || '').trim()
+  return PUBLISHER_NAMES[s] || s
+}
+
+// 책 종류 (제목에서): 자습서 / 평가문제집 / 문제집 / 개념서 / 교재
+function bookType (title) {
+  const t = String(title || '')
+  if (/자습서/.test(t)) return '자습서'
+  if (/평가문제/.test(t)) return '평가문제집'
+  if (/문제집|유형|쎈|RPM|\d+제/.test(t)) return '문제집'
+  if (/개념|기본서/.test(t)) return '개념서'
+  return '교재'
+}
+
 // 추천 이유 자동 생성 (F-4.4): 사실만 짧게. 광고·평가 문구(최고, 1등, 강추 등)는 넣지 않음
 // 예) "삼각함수 단원 · EBSi 무료 강의 · 59분", "대수 과목 · EBS 교재"
 function autoReason (item, courseLabel) {
@@ -121,7 +140,10 @@ function autoReason (item, courseLabel) {
   if (item.kind !== 'book' && item.unit && item.unit !== '*') parts.push(item.unit + ' 단원')
   else if (courseLabel) parts.push(courseLabel + ' 과목')
   if (item.kind === 'book') {
-    parts.push('EBS 교재')
+    // 'EBS 교재'는 EBS 책에만. 시중 교재는 출판사 이름 그대로 + 책 종류 (사용자 캡처 2026-11-13: 지학사·미래엔 책에 'EBS 교재'로 나옴)
+    const pub = pubName(item.provider)
+    if (/EBS|한국교육방송/.test(pub)) parts.push('EBS 교재')
+    else parts.push((pub ? pub + ' ' : '') + bookType(item.title))
   } else {
     parts.push(String(item.provider || 'EBS').trim() + ' 무료 강의')
     if (item.kind === 'playlist' && item.itemCount) parts.push(item.itemCount + '강 재생목록')
@@ -172,7 +194,8 @@ function otherVideoItems (searchJson, detailJson, ctx) {
     return (ctx.ebsAll || ctx.channelIds).indexOf(x.channelId) === -1 && !off[x.channelId] &&
       x.durationMin >= (ctx.minMinutes || ctx.filters.minVideoMinutes || 20) && !!ctx.unit && titleHasUnit(x.title, ctx.unit) &&
       !blockWords.some(function (w) { return t.includes(w) }) && !blocked(x.title, ctx.school, ctx.filters) &&
-      !videoRuleFails(x, ctx.filters, ctx.curriculum) && !isExam(x.title, ctx.filters)
+      !videoRuleFails(x, ctx.filters, ctx.curriculum) && !isExam(x.title, ctx.filters) && !gradeConflict(x.title, ctx.gradeLabel) && !termConflict(x.title, ctx.gradeLabel, ctx.term) &&
+      !courseNameConflict(x.title, ctx.otherKeys)
   }).map(function (x) { x.channelGroup = 'other'; x.unitMatch = true; return x })
 }
 
@@ -216,7 +239,7 @@ function videoItems (searchJson, detailJson, ctx) {
 function bookItems (kakaoJson, ctx) {
   return (kakaoJson.documents || []).map(function (d) {
     return {
-      kind: 'book', sourceId: d.isbn || d.url, title: d.title, provider: d.publisher || '',
+      kind: 'book', sourceId: d.isbn || d.url, title: d.title, provider: pubName(d.publisher),
       authors: (d.authors || []).join(', '), year: (d.datetime || '').slice(0, 4),
       thumbnail: d.thumbnail || '', url: d.url || ''
     }
@@ -257,7 +280,7 @@ async function listChannelPlaylists (channelId, key, usage) {
 
 // 제목 비교용: 띄어쓰기 없애고, 로마 숫자 Ⅰ·Ⅱ를 1·2로
 // (로마 숫자를 먼저 바꿈: toLowerCase가 Ⅱ를 ⅱ로 바꾸기 때문. 소문자 ⅰ·ⅱ도 함께)
-function normTitle (s) { return String(s || '').replace(/[Ⅰⅰ]/g, '1').replace(/[Ⅱⅱ]/g, '2').toLowerCase().replace(/\s+/g, '') }
+function normTitle (s) { return String(s || '').normalize('NFC').replace(/[Ⅰⅰ]/g, '1').replace(/[Ⅱⅱ]/g, '2').toLowerCase().replace(/\s+/g, '') }
 
 // 영상·재생목록 규칙 (사용자 결정 2026-11-12): 게시 연도가 기준보다 이전이거나 제목에 '예비과정' 류 말이 있으면 뺌
 // 숫자·말은 data/sources.json filters.minVideoYear / prepCourseWords. 책에는 적용하지 않음
@@ -314,8 +337,12 @@ function matchPlaylists (list, names, unit, ctx, excludes) {
   }).filter(function (x) {
     const t = normTitle(x.title)
     return ctx.channelIds.indexOf(x.channelId) !== -1 && x.itemCount >= 2 && ns.some(function (n) { return t.includes(n) }) &&
-      !ex.some(function (e) { return t.includes(e) }) && !mixedCourses(x.title, ctx.filters) && !blocked(x.title, ctx.school, ctx.filters) && !videoRuleFails(x, ctx.filters, ctx.curriculum)
+      !ex.some(function (e) { return t.includes(e) }) && !mixedCourses(x.title, ctx.filters) && !blocked(x.title, ctx.school, ctx.filters) && !videoRuleFails(x, ctx.filters, ctx.curriculum) &&
+      !gradeConflict(x.title, ctx.gradeLabel) && !termConflict(x.title, ctx.gradeLabel, ctx.term) && !courseNameConflict(x.title, ctx.otherKeys)
   }).map(function (x) { x.unitMatch = !!unit && titleHasUnit(x.title, unit); return x })
+    // 중학교 학기 과목의 과목 전체('*') 재생목록은 제목에 그 학년·학기 표시가 있어야 함
+    // (과목 이름이 '수학'뿐이라 다른 학년에 걸림, 표본 검사 권장 1). 학기 없는 과목(중학 영어 등)은 다른 학년 표시만 뺌
+    .filter(function (x) { return x.unitMatch || !ctx.term || gradeMarked(x.title, ctx.gradeLabel, ctx.term) })
     // 단원 이름이 있는 것 → 강의 수 많은 것 → 최근 것
     .sort(function (a, b) { return (b.unitMatch - a.unitMatch) || (b.itemCount - a.itemCount) || (Number(b.year) - Number(a.year)) })
 }
@@ -426,11 +453,63 @@ function mergeUploads (fresh, old) {
 }
 
 // 다른 학년 표시가 제목에 있으면 뺌 (예: 중2 단원인데 제목이 "중3 …")
+// 중학교면 초등·고등 표시도 뺌 (표본 검사 2026-11-12: "공통수학 1"·"RPM 수학1"·"초5"·"공통국어2"가 중학 과목에 걸림)
+const OTHER_LEVEL = /초[1-6]|초등|고[1-3]|고등|공통(수학|국어|영어)|수학(Ⅰ|Ⅱ|II|I|[12])(?![0-9\-학단강장부회권차편])/
 function gradeConflict (title, gradeLabel) {
+  if (!gradeLabel) return false
   const t = String(title || '').replace(/\s+/g, '')
-  const m = t.match(/중([123])/g)
-  if (!m || !gradeLabel) return false
+  if (gradeLabel[0] === '중' && OTHER_LEVEL.test(t)) return true
+  const m = (t.match(/중등?([123])/g) || []).map(function (x) { return x.replace('중등', '중') })
+  if (!m.length) return false
   return m.indexOf(gradeLabel.replace(/\s+/g, '')) === -1
+}
+
+// 같은 교과의 다른 과목 이름(4글자 이상, 내 이름과 겹치지 않는 것): 예) 영어Ⅱ 과목에 '독해와작문'·'공통영어', 중학 수학에 '확률과통계'
+// 과목에 allowOtherNames가 있으면 그 이름은 허용 (예: 공통수학1의 경우의 수 ← 2015 '확률과 통계' 강의, 운영 표본 2026-11-13)
+function courseKey (c) { return normTitle(String(c.search || c.label).replace(/^(영어|국어|수학) (?=\S)/, '')) }
+function otherCourseKeys (courses, own) {
+  const mine = [own.label, own.search].concat(own.searchAlias || [], own.allowOtherNames || []).filter(Boolean).map(normTitle).concat([courseKey(own)])
+  const out = []
+  courses.forEach(function (c) {
+    if (c.subject !== own.subject || c.id === own.id) return
+    const k = courseKey(c)
+    if (k.length >= 4 && !mine.some(function (m) { return m.includes(k) || k.includes(m) }) && out.indexOf(k) === -1) out.push(k)
+  })
+  return out
+}
+function courseNameConflict (title, keys) {
+  const t = normTitle(title)
+  return (keys || []).some(function (k) { return t.includes(k) })
+}
+
+// 학기 과목인데 제목에 같은 학년의 다른 학기 표시가 있는가 (예: 중2 1학기 과목에 "중2수학 … 2학기 1차고사", 운영 표본 2026-11-12)
+function termConflict (title, gradeLabel, term) {
+  if (!term || !gradeLabel) return false
+  const n = gradeLabel.slice(-1)
+  const t = String(title || '').replace(/\s+/g, '')
+  if (gradeTerms(t).some(function (x) { return x.g === n && x.s !== term })) return true
+  return (String(title || '').match(/(?<![0-9-])[12](?=\s*학기)/g) || []).some(function (x) { return x !== term })
+}
+
+// 학년-학기 표시 ("수학 2-1", "중등2-2" → [{g:'2', s:'1'}])
+function gradeTerms (t) {
+  const out = []
+  const re = /(?:수학|국어|영어|중등?|학년)([123])-([12])(?![0-9])/g
+  let m
+  while ((m = re.exec(t))) out.push({ g: m[1], s: m[2] })
+  return out
+}
+
+// 제목에 이 학년(학기 과목이면 이 학기까지) 표시가 있는가. 중2 1학기 → "중2", "2학년", "수학 2-1" 통과, "중등2-2"·"2학기"는 안 됨
+function gradeMarked (title, gradeLabel, term) {
+  if (!gradeLabel) return true
+  const t = String(title || '').replace(/\s+/g, '')
+  const n = gradeLabel.slice(-1)
+  const gts = gradeTerms(t).filter(function (x) { return x.g === n })
+  if (term && gts.some(function (x) { return x.s !== term })) return false
+  // 학기는 공백을 지우기 전 제목에서 ("중2 2학기"가 "중22학기"로 붙지 않게)
+  if (term && (String(title || '').match(/(?<![0-9-])[12](?=\s*학기)/g) || []).some(function (x) { return x !== term })) return false
+  return t.includes(gradeLabel) || t.includes('중등' + n) || t.includes(n + '학년') || gts.length > 0
 }
 
 // 캐시된 업로드 목록에서 이 과목·단원 영상 고르기 (0 unit). 단원 이름이 제목에 있어야 함
@@ -443,6 +522,7 @@ function matchUploads (rows, names, unit, ctx, excludes) {
     const item = { kind: 'video', title: r.t, year: r.d.slice(0, 4) }
     return titleHasUnit(r.t, unit) && ns.some(function (n) { return t.includes(n) }) && !ex.some(function (e) { return t.includes(e) }) &&
       !blocked(r.t, ctx.school, ctx.filters) && !videoRuleFails(item, ctx.filters, ctx.curriculum) && !gradeConflict(r.t, ctx.gradeLabel) &&
+      !termConflict(r.t, ctx.gradeLabel, ctx.term) && !courseNameConflict(r.t, ctx.otherKeys) &&
       !mixedCourses(r.t, ctx.filters)
   }).sort(function (a, b) { return b.d.localeCompare(a.d) })
 }
@@ -624,13 +704,92 @@ async function collectFromCache (channels, names, unit, ctx, excludes, key, usag
   return out
 }
 
+// 검색어마다 모아서 (EBS 교재만 찾던 때는 첫 검색어에서 멈췄음). 같은 책은 하나로, 과목·학년·판이 맞는 것만
 async function collectBooks (queries, ctx, key) {
+  const out = [], seen = {}
   for (const q of queries) {
     const j = await getJson('https://dapi.kakao.com/v3/search/book?size=10&target=title&query=' + encodeURIComponent(q), { Authorization: 'KakaoAK ' + key })
-    const items = bookItems(j, ctx)
-    if (items.length) return items
+    bookItems(j, ctx).forEach(function (b) {
+      if (seen[b.sourceId] || (ctx.bookCourse && !bookFitsCourse(b, ctx.bookCourse))) return
+      seen[b.sourceId] = true
+      out.push(b)
+    })
+    if (out.length >= 12) break
   }
-  return []
+  return out
+}
+
+// 책이 이 과목에 맞는가 (사용자 요청 2026-11-12 '책도 찾아줘': EBS 외 시중 개념서·자습서 허용)
+// bc = { names, excludes, school, curriculum, term, grades, exam }
+//  - 제목에 과목 이름(별칭)이 있어야 함. 중학교는 '중학/중등' + 과목, 학기 과목은 학년-학기("수학 2-1")까지
+//  - 중학 책의 학년 표시는 그 과목 학년 중 하나여야 함. 고등 과목에 중학 책은 안 됨
+//  - 판: 2022 과목은 2024년 이후 책, 제목에 '2015'가 있으면 안 됨. 2015 과목은 2018년 이후, 제목에 '2022'가 있으면 안 됨
+//  - 기출·모의고사 문제집은 수능 과목에서만 (수능 대비 학생만 보게)
+function bookFitsCourse (b, bc) {
+  const raw = String(b.title || '')
+  const t = normTitle(raw)
+  const y = Number(b.year) || 0
+  // 제목의 판 연도 "(2027)"와 "(2027 수능대비)"
+  const ed = Math.max.apply(null, [0].concat((raw.match(/\((20\d\d)\)/g) || []).map(function (x) { return Number(x.replace(/\D/g, '')) })))
+  const sat = (raw.match(/(20\d\d)\s*수능\s*대비/) || [])[1]
+  // 2022 과목: 2024년 이후 책. 2027학년도 수능까지는 2015 교육과정이라 그 수능 대비 교재는 뺌
+  if (bc.curriculum === '2022' && (y < 2024 || t.includes('2015') || t.includes('15개정') || (sat && Number(sat) <= 2027))) return false
+  if (bc.curriculum === '2015' && t.includes('22개정')) return false
+  // 2015 과목: 2018~2024년 책 (같은 이름의 2022 과목 새 판이 2025년부터 나옴). '2015'가 제목에 있으면 연도 무관. 2027년 이후 판은 안 됨
+  if (bc.curriculum === '2015' && (t.includes('2022') || ed >= 2027 || (!t.includes('2015') && (y < 2018 || y >= 2025)))) return false
+  if (!bc.exam && /기출|모의고사/.test(t) && !(bc.school === 'middle' && t.includes('듣기'))) return false
+  if ((bc.excludes || []).some(function (e) { const n = normTitle(e); return n && t.includes(n) })) return false
+  if (bc.school === 'middle') {
+    if (!/중학|중등|중[123]/.test(t) || !t.includes(normTitle(bc.subjLabel))) return false
+    const gts = gradeTerms(t)
+    const marks = gts.map(function (x) { return x.g }).concat((t.match(/중등?([123])|([123])학년/g) || []).map(function (x) { return x.replace(/\D/g, '') }))
+    if (marks.some(function (g) { return bc.grades.indexOf(g) === -1 })) return false
+    if (bc.term) return gts.some(function (x) { return bc.grades.indexOf(x.g) !== -1 && x.s === bc.term })
+    return true
+  }
+  if (/중학|중등/.test(t)) return false
+  const ebs = /EBS|한국교육방송/.test(String(b.provider || '') + raw)
+  return (bc.names || []).some(function (n) {
+    const m = normTitle(n)
+    if (!m || BOOK_BROAD.indexOf(m) !== -1) return false
+    // 2015 과목 이름(수학Ⅰ·화법과 작문 등)을 별칭으로 쓰는 2022 과목: 그 이름으로는 EBS 교재만 (시중 교재는 2015 판)
+    if ((bc.oldNames || []).indexOf(m) !== -1 && !ebs) return false
+    // '영어1'이 '공통영어1' 안에서 걸리지 않게 (과목 이름이 '공통'으로 시작하지 않으면)
+    if (!/^공통/.test(m) && t.split('공통' + m).join('|').indexOf(m) === -1) return false
+    return t.includes(m)
+  })
+}
+// 다른 과목 책에도 걸리는 넓은 말 (예: '경제' → 사회 경제, '통계' → 확률과 통계). 책 맞추기에는 안 씀
+const BOOK_BROAD = ['경제', '통계', '인공지능', '수학탐구', '영어독해']
+
+// 책 검색어: EBS 교재 + 시중 개념서·자습서·문제집 (카카오 책 검색, YouTube 할당량과 무관)
+function bookQueries (course, name, unit, grades) {
+  const subj = { korean: '국어', english: '영어', math: '수학' }[course.subject]
+  const qs = ['EBS ' + name + (unit ? ' ' + unit : ''), 'EBS ' + name].concat((course.bookSearch || []).map(function (q) { return 'EBS ' + q }))
+  if (course.group === 'term') {
+    const gt = grades[0] + '-' + String(course.label).charAt(0)
+    return qs.concat(['개념원리 중학 수학 ' + gt, '쎈 중등 수학 ' + gt, '중학 수학 ' + gt, '체크체크 수학 ' + gt, '개념쎈 중등 수학 ' + gt])
+  }
+  if (course.group === 'all') {
+    const more = []
+    grades.forEach(function (g) { more.push('중학 ' + subj + ' ' + g + '-1 자습서', '중학 ' + subj + ' ' + g + '-2 자습서', '중학 ' + subj + ' ' + g) })
+    if (unit) more.unshift('중학 ' + subj + ' ' + unit)
+    return qs.concat(more, subj === '국어' ? ['중학 국어 문법', '중학 국어 비문학', '중학 국어 문학'] : ['중학 영어 독해', '중학 영문법', '중학 영단어', '중학 영어듣기'])
+  }
+  const names = [name].concat(course.searchAlias || [], course.bookSearch || [])
+  const more = []
+  if (unit) more.push(name + ' ' + unit)
+  names.forEach(function (n) {
+    more.push(n + ' 자습서', '고등 ' + n)
+    // 정확도순이라 옛 판에 밀리는 새 판 (확인 2026-11-12: '고등 영어1 자습서'에 2026년 판이 안 보임 → 연도를 붙이면 나옴)
+    if (course.curriculum === '2022') more.push('고등 ' + n + ' 자습서 ' + new Date().getFullYear())
+    if (subj === '수학') more.push('개념원리 ' + n, '쎈 ' + n)
+  })
+  // 카카오 책 검색은 로마 숫자(Ⅰ·Ⅱ)로는 찾지 못함 → '1'·'2'로 바꾼 검색어 (확인 2026-11-12: "미적분Ⅰ 자습서" 0건, "미적분1 자습서" 13건)
+  const all = qs.concat(more)
+  const out = []
+  all.concat(all.map(function (q) { return q.replace(/Ⅰ/g, '1').replace(/Ⅱ/g, '2') })).forEach(function (q) { if (out.indexOf(q) === -1) out.push(q) })
+  return out.filter(function (q) { return !/[ⅠⅡ]/.test(q) })
 }
 
 /* ---------- 응답 ---------- */
@@ -714,18 +873,59 @@ function unitWordList (u, filters) {
   const map = (filters && filters.unitWords) || {}
   return (map[u] || [u]).map(normTitle).filter(function (w) { return w.length >= 2 })
 }
-function bookFitsUnit (title, unit, units, filters) {
+function bookFitsUnit (title, unit, units, filters, courseNames) {
   if (!unit || unit === '*') return true
   const own = unitWordList(unit, filters)
   const others = (units || []).filter(function (u) { return u !== unit })
   const otherWords = [].concat.apply([], others.map(function (u) { return unitWordList(u, filters) }))
+  // 과목 이름은 먼저 지움 ('확률과 통계'의 '통계', '언어와 매체'의 '매체'가 단원 말로 잡히지 않게)
+  let base = normTitle(title)
+  ;(courseNames || []).map(normTitle).filter(Boolean).sort(function (a, b) { return b.length - a.length })
+    .forEach(function (n) { base = base.split(n).join('|') })
   // '비문학'처럼 이 단원 말(문학)을 품은 다른 단원 말은 먼저 지움
-  let t = normTitle(title)
+  let t = base
   otherWords.filter(function (o) { return own.some(function (w) { return o !== w && o.includes(w) }) })
     .forEach(function (o) { t = t.split(o).join('|') })
   if (own.some(function (w) { return t.includes(w) })) return true
-  return !otherWords.some(function (w) { return normTitle(title).includes(w) })
+  return !otherWords.some(function (w) { return base.includes(w) })
 }
+// EBS 수능 연계 강의 제목: 수능특강·수특·수능완성·수완, 'ebs27'·'27 수특'처럼 연도 붙은 연계 표시
+function isEbsLinked (title) {
+  const t = String(title || '').toLowerCase().replace(/\s+/g, '')
+  return /수능특강|수특|수능완성|수완|ebs연계|연계교재|ebs2\d|2\d수특|2\d수완/.test(t)
+}
+
+// 수능 연계·기출 교재 (수능 대비 학생에게만, 운영 결정 2026-11-12)
+function isExamBook (title) {
+  return /수능특강|수능완성|기출|모의고사|수능\s*대비/.test(String(title || ''))
+}
+
+// 중학 책의 학년 표시가 이 학년인가 (표시가 없으면 통과). "중학 국어 2-1"·"중2"·"2학년"·"중학 영어1"
+function bookGradeOk (title, n) {
+  const t = String(title || '').replace(/\s+/g, '')
+  const marks = gradeTerms(t).map(function (x) { return x.g })
+    .concat((t.match(/중등?([123])|([123])학년/g) || []).map(function (x) { return x.replace(/\D/g, '') }))
+    .concat((t.match(/(국어|영어|수학)([123])(?![0-9\-])/g) || []).map(function (x) { return x.replace(/\D/g, '') }))
+  return !marks.length || marks.indexOf(String(n)) !== -1
+}
+
+// 책 순서 점수: 단원 말 +3, 대표 출판사 +1, 최근 판(2018 → 0 … 2026 → 1), 자습서·개념서·교과서 +0.5
+const MAIN_BOOK_PUBLISHERS = ['개념원리', '신사고', '비상', '천재', '미래엔', '능률', '쎄듀', '마더텅', '동아출판', '지학사', 'EBS', '한국교육방송']
+function bookScore (it, unit, units, filters, names) {
+  let s = 0
+  if (unit && unit !== '*') {
+    const own = unitWordList(unit, filters)
+    let t = normTitle(it.title)
+    ;(names || []).map(normTitle).filter(Boolean).forEach(function (n) { t = t.split(n).join('|') })
+    if (own.some(function (w) { return t.includes(w) })) s += 3
+  }
+  const p = String(it.provider || '') + ' ' + String(it.title || '')
+  if (MAIN_BOOK_PUBLISHERS.some(function (m) { return p.includes(m) })) s += 1
+  s += Math.min(1, Math.max(0, (Number(it.year) - 2018) / 8))
+  if (/자습서|개념|교과서|기본서/.test(String(it.title || ''))) s += 0.5
+  return s
+}
+
 // 같은 시리즈의 다른 판(괄호 안 연도, '완성 2000제' 등)을 하나로 보는 열쇠
 function seriesKey (title) {
   return normTitle(String(title || '').replace(/\([^)]*\)/g, '')).replace(/\d+제?/g, '').replace(/완성|국어|영어|수학/g, '')
@@ -754,15 +954,27 @@ function handleRecs (u, res) {
     if (it.channelGroup === 'other' && offOther[it.channelId]) return false
     return true
   }
-  const exam = function (it) { return it.kind !== 'book' && (it.examSolution || isExam(it.title, filters)) }
+  // 2022 과목의 EBS 수능 연계 강의(수능특강·수특·수능완성·'ebs27' 등)도 수능 대비 묶음으로 (운영 표본 2026-11-12: 고2 문학 개념 칸이 고3 수능특강 강의로 채워짐)
+  // 2015 고3 과목은 그대로 개념 칸 (사용자 결정 2026-11-12 '고3 2015 수능특강·수능완성은 개념')
+  const exam = function (it) {
+    if (it.kind === 'book') return false
+    if (it.examSolution || isExam(it.title, filters)) return true
+    return curOf[it.courseId] === '2022' && isEbsLinked(it.title)
+  }
   // 영상은 그 단원·과목 전체, 책은 과목 단위라 단원과 상관없이 그 과목(코스) 것
   const all = readJson(DATA.recs).items.filter(function (it) {
     if (!usable(it)) return false
     return it.kind === 'book' || unit === '*' || it.unit === unit || it.unit === '*'
   })
   // 이 단원 항목 먼저 → 같은 묶음 안에서는 추천순 (출처 구분 없음, 사용자 결정 2026-11-12 EBS 우선순위 폐지)
+  // 인기도(조회수·채널 구독자수·최근성)를 추천 점수에 더함 (사용자 요청 2026-11-12)
+  const chStats = readStats().channels || {}
   const order = function (list) {
-    const sorted = sortRecs(list)
+    const sorted = sortRecs(list.map(function (it) {
+      const subs = (chStats[it.channelId] || {}).subs
+      // 단원 일치(아래 rank) 다음은 인기도가 순서를 정함. 기존 추천 점수(재생목록·길이 등)는 0.3배로만 (운영 지시 2026-11-12)
+      return Object.assign({}, it, { score: popScore(it, subs) + 0.3 * (it.score || 0) })
+    }))
     // 사용자 결정 2026-11-12(EBS 우선순위 폐지, "다른 강의/강사 EBS 고집할 필요 없음"): 출처와 관계없이
     // 이 단원 강의 먼저 → 같은 묶음 안에서는 추천순(단원·과목 일치, 재생목록, 길이, 조회수)
     const rank = function (it) { return unit !== '*' && it.unit === unit ? 0 : 10 }
@@ -828,17 +1040,32 @@ function handleRecs (u, res) {
   const videosScope = !videos.length ? 'none' : (unit !== '*' && videos.some(function (v) { return unitIds[v.id] }) ? 'unit' : 'course')
   // 책: 단원에 맞게 (사용자 요청 2026-11-12). 같은 시리즈의 다른 판은 한 권만
   function pickBooks () {
-    const units = []
-    readJson(DATA.curriculum).courses.forEach(function (c) { if (courses.indexOf(c.id) !== -1) units.push.apply(units, c.units) })
+    const units = [], names = []
+    readJson(DATA.curriculum).courses.forEach(function (c) {
+      if (courses.indexOf(c.id) === -1) return
+      units.push.apply(units, c.units)
+      names.push.apply(names, [c.label].concat(c.searchAlias || []))
+    })
     const seenSeries = {}
+    const g = /^[mh][123]$/.test(u.searchParams.get('grade') || '') ? u.searchParams.get('grade') : ''
+    const examCourse = readJson(DATA.curriculum).courses.some(function (c) { return courses.indexOf(c.id) !== -1 && c.group === 'exam' })
     const ok = function (it) {
-      if (!bookFitsUnit(it.title, unit, units, filters)) return false
+      // 수능 연계·기출 교재는 수능 대비 학생만 (수능 과목은 예외)
+      if (school === 'high' && !wantsExam && !examCourse && isExamBook(it.title)) return false
+      // 여러 학년이 같은 과목(중학 국어·영어): 다른 학년 표시가 있는 책은 뺌
+      if (g && g[0] === 'm' && !bookGradeOk(it.title, g[1])) return false
+      if (!bookFitsUnit(it.title, unit, units, filters, names)) return false
       const k = seriesKey(it.title)
       if (seenSeries[k]) return false
       seenSeries[k] = true
       return true
     }
-    return uniq(order(all.filter(function (it) { return it.kind === 'book' })).filter(ok), askMax || show.maxBooksPerArea || 2)
+    // 순서: 단원 일치 → 대표 출판사 → 최근 판 → 자습서·개념서 (EBS·시중 교재 구분 없음, 사용자 결정 2026-11-12)
+    const books = all.filter(function (it) { return it.kind === 'book' })
+      .map(function (it, i) { return { it: it, s: bookScore(it, unit, units, filters, names, src.publishers), i: i } })
+      .sort(function (a, b) { return (b.s - a.s) || (a.i - b.i) })
+      .map(function (x) { return x.it })
+    return uniq(books.filter(ok), askMax || show.maxBooksPerArea || 2)
   }
   send(res, 200, {
     videos: videos,
@@ -882,6 +1109,10 @@ async function handleCollect (req, res) {
   // 기본은 채널 목록 캐시 방식(할당량 적음). search.list는 body.useSearch === true 일 때만 (원칙적으로 쓰지 않음)
   const useSearch = body.useSearch === true
   ctx.gradeLabel = school === 'middle' ? gradeLabel : ''
+  // 중학교 학기 과목: '1학기' → '1' (과목 전체 재생목록의 학년·학기 표시 확인용)
+  ctx.term = school === 'middle' && course.group === 'term' ? String(course.label || '').charAt(0) : ''
+  // 같은 교과 다른 과목 이름이 제목에 있으면 뺌 (과목명 혼동, 운영 표본 2026-11-13)
+  ctx.otherKeys = otherCourseKeys(cur.courses, course)
   // 원래 짧은 유형의 단원은 최소 길이를 낮춤 (예: 영어 어휘·듣기 10분, filters.minVideoMinutesByUnit)
   const shortRule = ((src.filters.minVideoMinutesByUnit || {})[course.subject] || {})
   if (unit && shortRule[unit]) ctx.minMinutes = shortRule[unit]
@@ -917,8 +1148,17 @@ async function handleCollect (req, res) {
       }
     }
     // 책 검색어: 기본 + 과목에 적어 둔 다른 표기(bookSearch, 예: '미적분Ⅱ' → '미적분 2', '경제 수학' → '경제수학')
-    const bookQs = ['EBS ' + name + (unit ? ' ' + unit : ''), 'EBS ' + name].concat((course.bookSearch || []).map(function (q) { return 'EBS ' + q }))
-    const books = await collectBooks(bookQs, ctx, keys.KAKAO_REST_API_KEY)
+    // 이 과목을 듣는 학년들 (중학 '국어'·'영어'는 여러 학년이 같은 과목)
+    const grades = Object.keys(cur.offer).filter(function (g) { return g[0] === grade[0] && ((cur.offer[g] || {})[course.subject] || []).indexOf(course.id) !== -1 }).map(function (g) { return g[1] })
+    ctx.bookCourse = {
+      names: [name].concat(course.searchAlias || [], course.bookSearch || []), excludes: course.searchExclude || [], school: school,
+      curriculum: course.curriculum, term: course.group === 'term' ? String(course.label).charAt(0) : '', grades: grades,
+      exam: course.group === 'exam', subjLabel: subjLabel,
+      // 2015 과목 이름 중 이 과목 자기 이름이 아닌 것 (문학·기하처럼 두 교육과정에 같은 이름이 있으면 자기 이름은 그대로 씀)
+      oldNames: course.curriculum === '2022' ? cur.courses.filter(function (c) { return c.curriculum === '2015' }).map(function (c) { return normTitle(c.label) })
+        .filter(function (n) { return n !== normTitle(name) }) : []
+    }
+    const books = await collectBooks(bookQueries(course, name, unit, grades), ctx, keys.KAKAO_REST_API_KEY)
     found = pls.concat(vids, others, books)
   } catch (e) { addUsage(usage.units); return send(res, 502, { reason: 'upstream', units: usage.units }) }
   const used = addUsage(usage.units)
@@ -1076,6 +1316,86 @@ async function handleAddChannel (req, res) {
   send(res, 200, { ok: true, id: ch.id, name: decodeEntities((ch.snippet || {}).title) })
 }
 
+/* ---------- 인기도 (사용자 요청 2026-11-12: "추천순이나 인기 많은 순·구독자수 등으로 판별") ----------
+   채널 구독자수(channels.list 50개당 1 unit)는 data/youtube-cache/channel-stats.json 에 (YouTube 자료라 커밋하지 않음).
+   영상 조회수(videos.list 50개당 1 unit)는 승인 항목의 views 를 새로 고침. 재생목록은 조회수가 없어 채널 구독자수만 씀. */
+const STATS_FILE = path.join(CACHE_DIR, 'channel-stats.json')
+function readStats () {
+  try { return JSON.parse(fs.readFileSync(STATS_FILE, 'utf8')) } catch (e) { return { channels: {} } }
+}
+const SMALL_CHANNEL = 1000 // 구독자 이보다 적은 채널은 뒤로 (운영 지시 2026-11-12, 빼지는 않음)
+
+// 인기도 점수: 조회수(10만 회 ≈ 1.25, 최대 1.5) + 구독자수(100만 명 ≈ 1, 최대 1) + 최근성(최대 0.5). 작은 채널 -1
+// EBSi 강좌 링크는 조회수·채널 값이 없어 중간값 1.5
+function popScore (it, subs) {
+  if (it.kind === 'book') return 0
+  if (it.kind === 'course') return 1.5
+  let s = 0
+  if (it.views) s += Math.min(1.5, Math.log10(it.views + 1) / 4)
+  // 재생목록은 조회수가 없어 중간값(조회 1천 회 정도)
+  else if (it.kind === 'playlist') s += 0.75
+  if (typeof subs === 'number') {
+    s += Math.min(1, Math.log10(subs + 1) / 6)
+    if (subs < SMALL_CHANNEL) s -= 1
+  }
+  const y = Number(it.year) || 0
+  if (y) s += Math.min(0.5, Math.max(0, (y - 2018) / 16))
+  return Math.round(s * 100) / 100
+}
+
+function videoIdOf (it) {
+  const m = String(it.url || '').match(/[?&]v=([A-Za-z0-9_-]{11})/)
+  return m ? m[1] : ''
+}
+
+async function handleStats (req, res) {
+  await readBody(req)
+  const keys = readKeys()
+  if (!keys.YOUTUBE_API_KEY) return send(res, 503, { reason: 'no-key' })
+  const data = readJson(DATA.recs)
+  const approved = data.items.filter(function (it) { return it.review && it.review.status === 'approved' })
+  const chIds = [], vIds = []
+  approved.forEach(function (it) {
+    if (validChannelId(it.channelId) && chIds.indexOf(it.channelId) === -1) chIds.push(it.channelId)
+    const v = it.kind === 'video' ? videoIdOf(it) : ''
+    if (v && vIds.indexOf(v) === -1) vIds.push(v)
+  })
+  const need = Math.ceil(chIds.length / 50) + Math.ceil(vIds.length / 50)
+  if (usedToday() + need > DAILY_UNIT_LIMIT) return send(res, 429, { reason: 'daily-limit', usedToday: usedToday(), need: need })
+  const usage = { units: 0 }
+  const stats = readStats()
+  stats.channels = stats.channels || {}
+  const views = {}
+  try {
+    for (let i = 0; i < chIds.length; i += 50) {
+      const j = await getJson(YT + 'channels?part=statistics&id=' + chIds.slice(i, i + 50).join(',') + '&key=' + encodeURIComponent(keys.YOUTUBE_API_KEY))
+      usage.units += 1
+      ;(j.items || []).forEach(function (c) {
+        const st = c.statistics || {}
+        stats.channels[c.id] = { subs: st.hiddenSubscriberCount ? null : Number(st.subscriberCount || 0), at: today() }
+      })
+    }
+    for (let i = 0; i < vIds.length; i += 50) {
+      const j = await getJson(YT + 'videos?part=statistics&id=' + vIds.slice(i, i + 50).join(',') + '&key=' + encodeURIComponent(keys.YOUTUBE_API_KEY))
+      usage.units += 1
+      ;(j.items || []).forEach(function (v) { views[v.id] = Number((v.statistics || {}).viewCount || 0) })
+    }
+  } catch (e) { addUsage(usage.units); return send(res, 502, { reason: 'upstream', units: usage.units }) }
+  fs.mkdirSync(CACHE_DIR, { recursive: true })
+  fs.writeFileSync(STATS_FILE + '.tmp', JSON.stringify(stats) + '\n')
+  fs.renameSync(STATS_FILE + '.tmp', STATS_FILE)
+  const updated = await writeRecs(function (d) {
+    let n = 0
+    d.items.forEach(function (it) {
+      const v = it.kind === 'video' ? videoIdOf(it) : ''
+      if (v && typeof views[v] === 'number') { it.views = views[v]; n += 1 }
+    })
+    return n
+  })
+  const used = addUsage(usage.units)
+  send(res, 200, { channels: Object.keys(stats.channels).length, videos: updated, units: usage.units, usedToday: used })
+}
+
 function handleUsage (res) {
   const src = readJson(DATA.sources)
   const chans = src.youtubeChannels.map(function (c) { return { id: c.id, name: c.name, group: 'ebs' } })
@@ -1126,7 +1446,7 @@ async function apiMiddleware (req, res, next) {
   try {
     if (u.pathname === '/api/recs' && req.method === 'GET') return handleRecs(u, res)
     if (u.pathname === '/api/img' && req.method === 'GET') return await handleImg(u, res, readJson(DATA.sources).images)
-    const POSTS = { '/api/collect': handleCollect, '/api/review': handleReview, '/api/sync': handleSync, '/api/add-url': handleAddUrl, '/api/add-channel': handleAddChannel }
+    const POSTS = { '/api/collect': handleCollect, '/api/review': handleReview, '/api/sync': handleSync, '/api/add-url': handleAddUrl, '/api/add-channel': handleAddChannel, '/api/stats': handleStats }
     if (POSTS[u.pathname]) {
       // 다른 웹사이트가 이 컴퓨터의 미리보기 서버로 요청을 보내 할당량을 쓰거나 파일을 바꾸지 못하게
       if (req.method !== 'POST') return send(res, 405, { reason: 'method' })
@@ -1146,4 +1466,4 @@ async function apiMiddleware (req, res, next) {
 }
 
 module.exports = apiMiddleware
-module.exports.helpers = { bookFitsUnit, seriesKey, uploadsPlaylistId, uploadRows, mergeUploads, gradeConflict, matchUploads, parseYouTubeUrl, parseChannelRef, validChannelId, quotaDay, today,sourceGroup, isExam, otherVideoItems, videoRuleFails, normTitle, matchPlaylists, mixedCourses, titleHasUnit, isoMinutes, blocked, rankScore, sortRecs, canSetStatus, autoReason, imgAllowed, playlistItems, videoItems, bookItems, publicItem }
+module.exports.helpers = { bookFitsUnit, seriesKey, uploadsPlaylistId, uploadRows, mergeUploads, gradeConflict, gradeMarked, bookFitsCourse, bookQueries, isExamBook, bookGradeOk, bookScore, popScore, videoIdOf, termConflict, isEbsLinked, pubName, bookType, otherCourseKeys, courseNameConflict, matchUploads, parseYouTubeUrl, parseChannelRef, validChannelId, quotaDay, today,sourceGroup, isExam, otherVideoItems, videoRuleFails, normTitle, matchPlaylists, mixedCourses, titleHasUnit, isoMinutes, blocked, rankScore, sortRecs, canSetStatus, autoReason, imgAllowed, playlistItems, videoItems, bookItems, publicItem }

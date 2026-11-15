@@ -396,7 +396,7 @@ test('추천 이유 자동 생성: 사실만 짧게, 광고 문구 없음', () =
   const b = H.autoReason({ kind: 'book', unit: '*', provider: '한국교육방송공사' }, '대수')
   assert.equal(b, '대수 과목 · EBS 교재')
   // 예전 방식으로 단원 아래 저장된 책이라도, 책은 과목 단위로 보여 주므로 단원 이름을 쓰지 않음
-  assert.equal(H.autoReason({ kind: 'book', unit: '삼각함수' }, '대수'), '대수 과목 · EBS 교재')
+  assert.equal(H.autoReason({ kind: 'book', unit: '삼각함수', provider: 'EBS' }, '대수'), '대수 과목 · EBS 교재')
   for (const s of [v, p, b]) {
     for (const ad of ['최고', '1등', '강추', '필수', '할인', '구매', '추천합니다', '!']) assert.ok(!s.includes(ad), s + ' / ' + ad)
   }
@@ -455,6 +455,50 @@ test('할당량 적은 방식: 채널 업로드 목록 캐시·서버 안 단원
   assert.equal(H.gradeConflict('[중3 수학] 이차함수', '중2'), true)
   assert.equal(H.gradeConflict('[중2 수학] 일차함수', '중2'), false)
   assert.equal(H.gradeConflict('일차함수 개념', '중2'), false)
+  // 표본 검사(2026-11-12) 불량 사례: 중학 과목에 고등·초등 재생목록
+  for (const t of ['공통수학 1 전체 강의', 'RPM 수학1 문제풀이', '초5 수학 1주일 완성?', '[공통국어2-고전소설] 춘향전', '잠깐수학 중1-2 중간고사']) {
+    assert.equal(H.gradeConflict(t, '중2'), true, t)
+  }
+  for (const t of ['중2 수학 2-1 일차함수', '수학 2-1 1단원', '중학 수학1학기 개념', '수학 1강 소인수분해']) {
+    assert.equal(H.gradeConflict(t, '중2'), false, t)
+  }
+  assert.equal(H.gradeConflict('수학Ⅰ 지수함수', '고2'), false, '고등학교는 수학Ⅰ 표시로 빼지 않음')
+  assert.equal(H.gradeMarked('중2 수학 개념', '중2'), true)
+  assert.equal(H.gradeMarked('수학 2-2 전체 강의', '중2'), true)
+  assert.equal(H.gradeMarked('2학년 국어 교과서', '중2'), true)
+  assert.equal(H.gradeMarked('수학 개념 총정리', '중2'), false, '과목 전체 재생목록은 학년 표시 필요')
+  assert.equal(H.gradeMarked('수학 1-2 강의', '중2'), false)
+  assert.equal(H.gradeConflict('중등1-2수학 짧개념', '중2'), true, '중등N도 학년 표시')
+  assert.equal(H.gradeMarked('중등2-2수학 짧개념&문제풀이', '중2', '2'), true)
+  assert.equal(H.gradeMarked('중등2-2수학 짧개념&문제풀이', '중2', '1'), false, '다른 학기')
+  assert.equal(H.gradeMarked('중2 2학기 기말 대비', '중2', '1'), false, '다른 학기')
+  assert.equal(H.gradeMarked('원리가 보이는 5분 중학 수학', '중1', '1'), false)
+  // 책: 시중 교재 허용, 과목·학년·학기·판 맞춤 (사용자 요청 2026-11-12 '책도 찾아줘')
+  const term21 = { school: 'middle', curriculum: '2022', term: '1', grades: ['2'], subjLabel: '수학', exam: false }
+  assert.equal(H.bookFitsCourse({ title: '개념원리 중학 수학 2-1 (2025년)', year: '2024' }, term21), true)
+  assert.equal(H.bookFitsCourse({ title: '개념원리 중학 수학 2-2 (2025년)', year: '2024' }, term21), false, '다른 학기')
+  assert.equal(H.bookFitsCourse({ title: '쎈 중등 수학 1-1', year: '2024' }, term21), false, '다른 학년')
+  assert.equal(H.bookFitsCourse({ title: '개념원리 중학 수학 2-1', year: '2019' }, term21), false, '2022 과목에 옛 판')
+  const midKo = { school: 'middle', curriculum: '2022', term: '', grades: ['1', '2'], subjLabel: '국어', exam: false }
+  assert.equal(H.bookFitsCourse({ title: '중학 국어 비문학 독해 1', year: '2025' }, midKo), true)
+  assert.equal(H.bookFitsCourse({ title: '중학 국어 3-1 자습서', year: '2025' }, midKo), false, '그 과목 학년이 아님')
+  const alg = { school: 'high', curriculum: '2022', names: ['대수', '수학Ⅰ'], excludes: ['공통수학', '대수능'], exam: false }
+  assert.equal(H.bookFitsCourse({ title: '개념원리 고등 대수 (2025년)', year: '2025' }, alg), true)
+  assert.equal(H.bookFitsCourse({ title: '개념원리 공통수학1', year: '2025' }, alg), false)
+  assert.equal(H.bookFitsCourse({ title: '자이스토리 대수 기출', year: '2025' }, alg), false, '기출 문제집은 수능 과목에서만')
+  assert.equal(H.bookFitsCourse({ title: '중등 수학 대수', year: '2025' }, alg), false, '고등 과목에 중학 책')
+  const alg2 = Object.assign({}, alg, { oldNames: ['수학1'] })
+  assert.equal(H.bookFitsCourse({ title: '쎈 고등 수학1', year: '2024', provider: '좋은책신사고' }, alg2), false, '2015 이름 시중 교재')
+  assert.equal(H.bookFitsCourse({ title: 'EBS 올림포스 수학1', year: '2024', provider: 'EBS한국교육방송공사' }, alg2), true)
+  const st15 = { school: 'high', curriculum: '2015', names: ['확률과 통계'], exam: false }
+  assert.equal(H.bookFitsCourse({ title: '고등 확률과 통계 자습서(이준열)', year: '2019' }, st15), true)
+  assert.equal(H.bookFitsCourse({ title: '고등 확률과 통계 자습서(김원경)(2026)', year: '2026' }, st15), false, '2022 새 판')
+  const mid3 = { school: 'middle', curriculum: '2015', term: '1', grades: ['3'], subjLabel: '수학', exam: false }
+  assert.equal(H.bookFitsCourse({ title: '개념원리 중학 수학 3-1(2026)', year: '2022' }, mid3), true)
+  assert.equal(H.bookFitsCourse({ title: '개념원리 중학 수학 3-1(2027)', year: '2025' }, mid3), false, '2027 판은 2022 교육과정')
+  const calc2 = { school: 'high', curriculum: '2022', names: ['미적분Ⅱ', '미적분', '미적분 2'], exam: false }
+  assert.equal(H.bookFitsCourse({ title: 'EBS 수능완성 수학영역 수학1·수학2·미적분(2026)(2027 수능대비)', year: '2026', provider: '한국교육방송공사' }, calc2), false)
+  assert.equal(H.bookFitsCourse({ title: '실용 통계 고등 확률과 통계', year: '2026' }, { school: 'high', curriculum: '2022', names: ['통계'], exam: false }), false, '넓은 말')
   assert.deepEqual(H.parseYouTubeUrl('https://www.youtube.com/watch?v=DF4Jj5JPOVs&t=10'), { type: 'video', id: 'DF4Jj5JPOVs' })
   assert.deepEqual(H.parseYouTubeUrl('https://youtu.be/DF4Jj5JPOVs'), { type: 'video', id: 'DF4Jj5JPOVs' })
   assert.deepEqual(H.parseYouTubeUrl('https://www.youtube.com/playlist?list=PL1234567890ab'), { type: 'playlist', id: 'PL1234567890ab' })
@@ -535,6 +579,39 @@ test('책도 단원에 맞게 (사용자 요청 2026-11-12): 다른 단원 책�
   assert.equal(H.bookFitsUnit('EBS 필독 중학 국어 문법', '문학', units, src.filters), false, '문학에 문법 책 안 됨')
   assert.equal(H.bookFitsUnit('EBS 필독 중학 국어 문법', '쓰기', units, src.filters), false)
   assert.equal(H.bookFitsUnit('EBS 필독 중학 국어 문법', '문법', units, src.filters), true)
+  const e1 = { school: 'high', curriculum: '2022', names: ['영어Ⅰ'], exam: false }
+  assert.equal(H.bookFitsCourse({ title: 'High School Common English 1(고등 공통영어 1) 해설서', year: '2025' }, e1), false, '공통영어1 안의 영어1')
+  assert.equal(H.bookFitsCourse({ title: '고등 영어1 자습서(김성연)(2026)', year: '2026' }, e1), true)
+  assert.equal(H.bookFitsCourse({ title: '쎈 고등 확률과 통계(2026)(22개정)', year: '2024' }, { school: 'high', curriculum: '2015', names: ['확률과 통계'], exam: false }), false, '22개정 표시')
+  assert.equal(H.isExamBook('EBS 수능특강 문학작품 연계 기출1'), true)
+  assert.equal(H.isExamBook('고등 문학 자습서(2026)'), false)
+  assert.equal(H.bookGradeOk('중학 국어 1-1 자습서', '2'), false)
+  assert.equal(H.bookGradeOk('중학 영어1 자습서', '2'), false)
+  assert.equal(H.bookGradeOk('중학 국어 2-1 자습서', '2'), true)
+  assert.equal(H.bookGradeOk('EBS 필독 중학 국어 문법', '2'), true, '학년 표시 없으면 통과')
+  assert.ok(H.bookScore({ title: '고등 문학 자습서', provider: '비상교육', year: '2026' }, '*') > H.bookScore({ title: '문학 길잡이', provider: '어느출판', year: '2019' }, '*'))
+  // 자모로 풀린 제목(NFD)도 차단어·단원 비교가 됨
+  const nfd = '3년 후 수능에서 만점 받는 법 l 다항식 OT'.normalize('NFD')
+  assert.equal(H.blocked(nfd, 'high', { titleBlockWords: ['만점 받는 법'], gradeBlockWords: {} }), true)
+  assert.equal(H.titleHasUnit(nfd, '다항식'), true)
+  assert.equal(H.termConflict('22개정 중2수학 기출문제풀이ㅡ2학기 1차고사 3강', '중2', '1'), true)
+  assert.equal(H.termConflict('중2 1학기 일차함수', '중2', '1'), false)
+  assert.equal(H.isEbsLinked('[고3]ebs27문학 현대시5강'), true)
+  assert.equal(H.isEbsLinked('27 수특 문학 현대시 01'), true)
+  assert.equal(H.isEbsLinked('현대시 개념 총정리'), false)
+  // 인기도: 조회수·구독자 많은 쪽이 앞, 작은 채널(1천 미만)은 뒤로
+  const pv = { kind: 'video', views: 300000, year: '2024' }
+  assert.ok(H.popScore(pv, 500000) > H.popScore({ kind: 'video', views: 2000, year: '2024' }, 500000))
+  assert.ok(H.popScore(pv, 500) < H.popScore(pv, 50000), '작은 채널 감점')
+  assert.equal(H.popScore({ kind: 'book' }, 1e6), 0)
+  assert.equal(H.videoIdOf({ url: 'https://www.youtube.com/watch?v=DF4Jj5JPOVs' }), 'DF4Jj5JPOVs')
+  // 과목 이름 속 단원 말('확률과 통계'의 '통계')은 단원 표시로 보지 않음
+  const statUnits = ['경우의 수', '확률', '통계']
+  assert.equal(H.bookFitsUnit('EBS 수능특강 확률과 통계', '확률', statUnits, {}, ['확률과 통계']), true)
+  assert.equal(H.bookFitsUnit('고등 확률과 통계 통계 집중', '확률', statUnits, {}, ['확률과 통계']), false)
+  // 카카오는 로마 숫자로 찾지 못함 → 숫자 검색어
+  const qs = H.bookQueries({ subject: 'math', group: 'general', label: '미적분Ⅰ' }, '미적분Ⅰ', null, ['2'])
+  assert.ok(qs.includes('미적분1 자습서') && !qs.some((q) => /[ⅠⅡ]/.test(q)))
   assert.equal(H.bookFitsUnit('EBS 중학 국어 현대시 감상', '문학', units, src.filters), true)
   assert.equal(H.bookFitsUnit('EBS 필독 중학 비문학 읽기(2021)', '문학', units, src.filters), false, '비문학은 문학이 아님')
   assert.equal(H.bookFitsUnit('EBS 필독 중학 비문학 읽기(2021)', '읽기', units, src.filters), true)
@@ -562,6 +639,49 @@ test('추천 카드: 보기·숨기기 줄은 카드 맨 아래(같은 줄 카�
   assert.match(html, /\.item-body \.item-actions \{ margin-top: auto;/)
   assert.match(app, /class="item-body"/)
   assert.ok(!/class="site-link"/.test(app), '영상 묶음 아래 사이트 바로가기 없음')
+})
+
+test('추천 종류 탭 [영상 강의]·[수능 대비]·[책 추천] (사용자 요청 2026-11-13): 접근성·기본 탭·인쇄·움직임', () => {
+  const html = read('design/prototype/index.html')
+  const app = read('design/prototype/app.js')
+  assert.match(app, /class="rec-tabs" role="tablist" aria-label="추천 종류"/)
+  assert.match(app, /role="tab" id="' \+ sid \+ '-tab-' \+ t\.id \+ '" aria-controls="' \+ sid \+ '-panel-'/)
+  assert.match(app, /class="rec-panel" role="tabpanel"/)
+  assert.match(app, /: 'video';/, '기본은 영상 강의')
+  assert.match(app, /label: '책 추천'/)
+  assert.match(app, /label: '수능 대비'/)
+  assert.match(app, /a === 'rectab'/)
+  // 방향키는 role=tab 공통 처리 (과목 탭과 같은 코드)
+  assert.match(app, /t\.getAttribute\('role'\) !== 'tab'/)
+  assert.match(html, /\.rec-tabs button\[aria-selected='true'\]/)
+  assert.match(html, /\.rec-panel\[hidden\] \{ display: block !important; \}/, '인쇄는 모든 탭 내용')
+  assert.match(html, /\.m-swap, \.m-tab,/, 'reduced-motion에서 탭 전환 움직임 끔')
+})
+
+test('과목명 혼동: 같은 교과 다른 과목 이름이 제목에 있으면 뺌, allowOtherNames는 허용 (운영 표본 2026-11-13)', () => {
+  const cur = JSON.parse(read('data/curriculum.json'))
+  const c = (id) => cur.courses.find((x) => x.id === id)
+  const e2 = H.otherCourseKeys(cur.courses, c('e22-e2'))
+  assert.ok(H.courseNameConflict('영어2 천재(안) 독해와작문 1과 본문 해설', e2))
+  assert.ok(H.courseNameConflict('고1 공통영어2 YBM(박) 2022년 개정', e2))
+  assert.ok(!H.courseNameConflict('영어2 천재 3과 본문 해설', e2))
+  assert.ok(H.courseNameConflict('[22개정 신사고 쎈 확률과통계] 이항분포', H.otherCourseKeys(cur.courses, c('mm22-2b'))))
+  assert.ok(!H.courseNameConflict('정승제의 확률과통계 순열과 조합', H.otherCourseKeys(cur.courses, c('m22-c1'))), '공통수학1은 확률과 통계 강의 허용')
+  // 2022 화법과 언어는 별칭(화법과 작문·언어와 매체)이 자기 이름이라 걸리지 않음
+  assert.ok(!H.courseNameConflict('화법과 작문 핵심 정리', H.otherCourseKeys(cur.courses, c('k22-speech'))))
+  const approved = recs.items.filter((it) => it.review.status === 'approved' && (it.kind === 'video' || it.kind === 'playlist'))
+  assert.ok(!approved.some((it) => H.courseNameConflict(it.title, H.otherCourseKeys(cur.courses, c(it.courseId)))), '승인 목록에 과목명 혼동 없음')
+})
+
+test('책 추천 이유: EBS 교재는 EBS 책에만, 시중 교재는 출판사 정식 이름 + 책 종류 (사용자 캡처 2026-11-13)', () => {
+  assert.equal(H.autoReason({ kind: 'book', provider: '미래엔', title: '고등 영어2 자습서(미래엔 김성연)(2026)' }, '영어Ⅱ'), '영어Ⅱ 과목 · 미래엔 자습서')
+  assert.equal(H.autoReason({ kind: 'book', provider: '천재교육사', title: '고등 문학 자습서' }, '문학'), '문학 과목 · 천재교육 자습서')
+  assert.equal(H.autoReason({ kind: 'book', provider: 'EBS한국교육방송공사', title: 'EBS 올림포스 대수' }, '대수'), '대수 과목 · EBS 교재')
+  assert.equal(H.autoReason({ kind: 'book', provider: '좋은책신사고', title: '쎈 중등 수학 2-1' }, '1학기'), '1학기 과목 · 좋은책신사고 문제집')
+  assert.equal(H.pubName('미래엔에듀'), '미래엔')
+  const books = recs.items.filter((it) => it.kind === 'book' && it.review.status === 'approved')
+  assert.ok(!books.some((it) => /EBS 교재/.test(it.reason) && !/EBS/.test(it.provider)), '시중 교재에 EBS 교재 없음')
+  assert.ok(!books.some((it) => /천재교육사|미래엔에듀/.test(it.provider)), '출판사 정식 이름')
 })
 
 test('수능 대비 구분: 기출 해설·기출의 미래·실전 모의고사는 개념 칸이 아니라 수능 대비 묶음 (operator 확인 2026-11-12)', () => {
