@@ -847,7 +847,8 @@ test('전 과목 시험 해설 재생목록(과목 이름 없음)은 받지 않�
 
 test('Vercel 배포 준비 (Q-8 = Vercel, 2026-11-15): 정적 내보내기·빌드 때 추천 생성·환경 변수 없음', () => {
   const v = JSON.parse(read('web/vercel.json'))
-  assert.equal(v.framework, 'nextjs')
+  // 프리셋 없이(Other) out/ 정적 파일만: nextjs 프리셋 + out 은 routes-manifest 를 out/ 에서 찾다 실패 (NEXT_NO_ROUTES_MANIFEST, 2026-11-16 첫 배포)
+  assert.equal(v.framework, null)
   assert.equal(v.outputDirectory, 'out')
   assert.equal(v.buildCommand, 'npm run build')
   assert.ok(!('env' in v) && !('build' in v && v.build.env), '환경 변수 없음')

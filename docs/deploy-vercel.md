@@ -18,7 +18,7 @@
 | 항목 | 값 |
 |---|---|
 | Root Directory (Vercel 프로젝트 설정에서 입력) | `web` |
-| Framework | Next.js |
+| Framework | 없음(Other) — `out/` 정적 파일만 올림. Next.js 프리셋 + `out` 조합은 `routes-manifest.json`을 `out/`에서 찾다 실패함(NEXT_NO_ROUTES_MANIFEST, 2026-11-16 첫 배포) |
 | Install Command | `npm ci` |
 | Build Command | `npm run build` (= 추천 JSON·과목 목록·아이콘을 `data/`·`design/icons/`에서 다시 만든 뒤 `next build`) |
 | Output Directory | `out` (정적 내보내기) |
@@ -41,7 +41,7 @@
 1. **GitHub에 최신 커밋 올리기(push)** — Vercel은 GitHub 저장소에서 코드를 받는다. 지금 로컬 `master` 가 GitHub보다 앞서 있으니, 올려도 될 때 요청해 주세요(push는 요청할 때만 함).
 2. **Vercel 계정 만들기** — https://vercel.com 에서 "Sign Up" → "Continue with GitHub". 개인 무료 요금제(Hobby)는 **비상업적 개인 사용**만 허용한다(공부길은 비영리 라이선스라 맞음 — 다만 학교·기관 이름으로 운영하면 요금제 조건을 다시 확인).
 3. **프로젝트 만들기** — 대시보드 "Add New… → Project" → `Educational_Content` 저장소 "Import".
-4. **설정 입력** — "Root Directory" 옆 "Edit" → `web` 선택. Framework는 Next.js로 자동 인식(아니면 직접 선택). Build·Install·Output은 `web/vercel.json` 값을 쓰므로 바꾸지 않음. **Environment Variables는 비워 둠.**
+4. **설정 입력** — "Root Directory" 옆 "Edit" → `web` 선택. Application Preset은 web/vercel.json이 정함(Other로 표시, 바꾸지 않음). Build·Install·Output은 `web/vercel.json` 값을 쓰므로 바꾸지 않음. **Environment Variables는 비워 둠.**
 5. **Deploy** 누르기 → 1~3분 뒤 `https://<프로젝트 이름>.vercel.app` 주소가 생김.
 6. 주소를 알려 주시면, 배포된 사이트에서 대표 사용 상황·네트워크 확인을 다시 하겠습니다.
 
